@@ -12,7 +12,7 @@ export const styles = StyleSheet.create({
   imageBox: { width: "100%", height: 220, backgroundColor: colors.surfaceMuted, borderRadius: 16, alignItems: "center", justifyContent: "center", marginBottom: 20, overflow: "hidden" },
   image: { width: "100%", height: "100%" },
   imageText: { color: colors.inkSoft, fontSize: 16, fontWeight: "600" },
-  loadingOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.4)", alignItems: "center", justifyContent: "center" },
+  loadingOverlay: { ...StyleSheet.absoluteFill, backgroundColor: "rgba(0,0,0,0.4)", alignItems: "center", justifyContent: "center" },
   loadingText: { marginTop: 10, color: "white", fontWeight: "600" },
   formGroup: { marginBottom: 12 },
   label: { marginBottom: 6, fontWeight: "600", color: colors.ink },

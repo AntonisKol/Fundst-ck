@@ -20,14 +20,14 @@ export const uploadImage = async (imageUri: string): Promise<string | null> => {
     });
 
     if (error) {
-      console.log("Supabase storage upload error:", error);
+      console.error("Supabase storage upload error:", error);
       return null;
     }
 
     const { data } = supabase.storage.from(BUCKET).getPublicUrl(fileName);
     return data.publicUrl;
   } catch (err) {
-    console.log("Supabase storage upload error:", err);
+    console.error("Supabase storage upload error:", err);
     return null;
   }
 };

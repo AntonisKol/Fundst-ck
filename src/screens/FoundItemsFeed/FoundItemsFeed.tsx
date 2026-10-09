@@ -64,8 +64,8 @@ const FoundItemsFeed = () => {
       supabase.from("lost_items").select("*").order("created_at", { ascending: false }),
     ]);
 
-    if (foundRes.error) console.log(foundRes.error);
-    if (lostRes.error) console.log(lostRes.error);
+    if (foundRes.error) console.error("Error fetching found items:", foundRes.error);
+    if (lostRes.error) console.error("Error fetching lost items:", lostRes.error);
 
     const found: FeedItem[] = (foundRes.data || []).map((item: any) => ({ ...item, type: "found" }));
     const lost: FeedItem[] = (lostRes.data || []).map((item: any) => ({ ...item, type: "lost" }));

@@ -13,7 +13,7 @@ const RequireAuthPrompt = ({ message }: Props) => {
   return (
     <View style={styles.page}>
       <View style={styles.cardWrapper}>
-        <BlurView intensity={30} tint="light" style={StyleSheet.absoluteFillObject} />
+        <BlurView intensity={30} tint="light" style={StyleSheet.absoluteFill} />
         <View style={styles.card}>
           <Text style={styles.title}>Sign in required</Text>
           <Text style={styles.subtitle}>{message}</Text>

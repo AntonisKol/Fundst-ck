@@ -43,11 +43,11 @@ const MapScreen = () => {
     ]);
 
     if (foundRes.error) {
-      console.log("Error fetching found items:", foundRes.error);
+      console.error("Error fetching found items:", foundRes.error);
       Alert.alert("Error fetching items", foundRes.error.message);
     }
     if (lostRes.error) {
-      console.log("Error fetching lost items:", lostRes.error);
+      console.error("Error fetching lost items:", lostRes.error);
       Alert.alert("Error fetching items", lostRes.error.message);
     }
 

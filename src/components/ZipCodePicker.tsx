@@ -7,6 +7,9 @@ import {
   TextInput,
   View,
   FlatList,
+  Keyboard,
+  Platform,
+  InputAccessoryView,
 } from "react-native";
 import { BERLIN_ZIP_CODES } from "../constants/berlinZipCodes";
 import { colors } from "../constants/theme";
@@ -17,6 +20,8 @@ interface Props {
   placeholder?: string;
   style?: any;
 }
+
+const ZIP_ACCESSORY_ID = "zipCodeSearchDone";
 
 const ZipCodePicker = ({ value, onChange, placeholder = "Select ZIP code", style }: Props) => {
   const [open, setOpen] = useState(false);
@@ -45,11 +50,26 @@ const ZipCodePicker = ({ value, onChange, placeholder = "Select ZIP code", style
           <Text style={styles.title}>Select ZIP code</Text>
           <TextInput
             style={styles.search}
-            placeholder="Search by ZIP or area..."
+            placeholder="Search by ZIP code..."
             value={search}
             onChangeText={setSearch}
             autoFocus
+            keyboardType="number-pad"
+            maxLength={5}
+            returnKeyType="done"
+            onSubmitEditing={Keyboard.dismiss}
+            inputAccessoryViewID={Platform.OS === "ios" ? ZIP_ACCESSORY_ID : undefined}
           />
+          {/* iOS number pads have no return/done key, so add a Done bar above it. */}
+          {Platform.OS === "ios" && (
+            <InputAccessoryView nativeID={ZIP_ACCESSORY_ID}>
+              <View style={styles.accessoryBar}>
+                <Pressable onPress={Keyboard.dismiss} hitSlop={12}>
+                  <Text style={styles.accessoryDone}>Done</Text>
+                </Pressable>
+              </View>
+            </InputAccessoryView>
+          )}
           <FlatList
             data={filtered}
             keyExtractor={(item) => item.zip}
@@ -103,6 +123,16 @@ const styles = StyleSheet.create({
   rowZip: { fontSize: 15, fontWeight: "600", color: colors.ink },
   rowArea: { fontSize: 15, color: colors.inkSoft },
   empty: { textAlign: "center", color: colors.inkSoft, marginTop: 40 },
+  accessoryBar: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    backgroundColor: colors.surfaceMuted,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
+  accessoryDone: { fontSize: 16, color: colors.stamp, fontWeight: "600" },
   closeButton: { paddingVertical: 16, alignItems: "center" },
   closeButtonText: { fontSize: 16, color: colors.stamp, fontWeight: "600" },
 });

@@ -18,8 +18,7 @@ import * as ImagePicker from "expo-image-picker";
 import { styles } from "./styled";
 import { useNavigation } from "@react-navigation/native";
 import { uploadImage } from "../../utils/storage";
-import { fetchCoordinates } from "../../utils/geocode";
-import { supabase } from "../../supabase/supabase";
+import { insertItem } from "../../utils/items";
 import { CATEGORIES } from "../../constants/categories";
 import DismissKeyboardOnTap from "../../components/DismissKeyboardOnTap";
 import ZipCodePicker from "../../components/ZipCodePicker";
@@ -69,7 +68,7 @@ const LostItemScreen = () => {
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ["images"],
       allowsEditing: true,
       quality: 0.7,
     });
@@ -99,21 +98,17 @@ const LostItemScreen = () => {
     }
 
     setUploading(true);
-    const coords = await fetchCoordinates(location);
-
-    const { error } = await supabase.from("lost_items").insert([{
+    const error = await insertItem("lost_items", {
       user_id: session.user.id,
       image_url: uploadedUrl,
       category,
       location,
       notes,
-      latitude: coords.latitude,
-      longitude: coords.longitude,
-    }]);
+    });
     setUploading(false);
 
     if (error) {
-      Alert.alert("Error", error.message);
+      Alert.alert("Error", error);
       return;
     }
 
@@ -155,7 +150,7 @@ const LostItemScreen = () => {
       >
         <ScrollView contentContainerStyle={styles.page}>
           <View style={styles.cardWrapper}>
-          <BlurView intensity={30} tint="light" style={StyleSheet.absoluteFillObject} />
+          <BlurView intensity={30} tint="light" style={StyleSheet.absoluteFill} />
           <View style={styles.card}>
             <Text style={styles.title}>Lost Item</Text>
             <Text style={styles.subtitle}>Report something you lost</Text>
@@ -208,7 +203,10 @@ const LostItemScreen = () => {
                 style={[styles.input, styles.noteInput, errors.notes && styles.errorInput]}
                 placeholder="Color, brand, condition..."
                 value={notes}
-                onChangeText={setNotes}
+                onChangeText={(text) => {
+                  setNotes(text);
+                  if (errors.notes) setErrors((prev) => ({ ...prev, notes: false }));
+                }}
                 multiline
                 returnKeyType="done"
               />

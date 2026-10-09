@@ -14,6 +14,7 @@ import {
 } from "react-native";
 import { BlurView } from "expo-blur";
 import { supabase } from "../../supabase/supabase";
+import { NETWORK_ERROR_MESSAGE } from "../../utils/items";
 import { useAuth } from "../../context/AuthContext";
 import { colors } from "../../constants/theme";
 import ZipCodePicker from "../../components/ZipCodePicker";
@@ -53,26 +54,48 @@ const AccountScreen = () => {
       return;
     }
 
-    setSubmitting(true);
-    const { error } =
-      mode === "signIn"
-        ? await supabase.auth.signInWithPassword({ email: email.trim(), password })
-        : await supabase.auth.signUp({
-            email: email.trim(),
-            password,
-            options: { data: { zip_code: zip } },
-          });
-    setSubmitting(false);
-
-    if (error) {
-      Alert.alert("Error", error.message);
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim())) {
+      setErrors({ email: true });
+      Alert.alert("Invalid email", `"${email.trim()}" isn't a valid email address.`);
       return;
     }
 
-    if (mode === "signUp") {
-      Alert.alert("Check your email", "Confirm your email address to finish signing up.");
+    if (password.length < 6) {
+      setErrors({ password: true });
+      Alert.alert("Password too short", "Password must be at least 6 characters.");
+      return;
     }
-    resetForm();
+
+    setSubmitting(true);
+    try {
+      const { data, error } =
+        mode === "signIn"
+          ? await supabase.auth.signInWithPassword({ email: email.trim(), password })
+          : await supabase.auth.signUp({
+              email: email.trim(),
+              password,
+              options: { data: { zip_code: zip } },
+            });
+
+      if (error) {
+        console.error(`Supabase ${mode} error:`, error);
+        Alert.alert(mode === "signIn" ? "Sign in failed" : "Sign up failed", error.message);
+        return;
+      }
+
+      // With email confirmation off, signUp returns a session and the user is
+      // already signed in - only ask them to check email when there's none.
+      if (mode === "signUp" && !data.session) {
+        Alert.alert("Check your email", "Confirm your email address, then sign in.");
+        setMode("signIn");
+      }
+      resetForm();
+    } catch (err) {
+      console.error(`Supabase ${mode} error:`, err);
+      Alert.alert("Error", NETWORK_ERROR_MESSAGE);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const signOut = async () => {
@@ -89,7 +112,7 @@ const AccountScreen = () => {
     return (
       <ScrollView contentContainerStyle={styles.page}>
         <View style={styles.cardWrapper}>
-        <BlurView intensity={30} tint="light" style={StyleSheet.absoluteFillObject} />
+        <BlurView intensity={30} tint="light" style={StyleSheet.absoluteFill} />
         <View style={styles.card}>
           <Text style={styles.title}>Account</Text>
           <Text style={styles.subtitle}>You're signed in</Text>
@@ -118,7 +141,7 @@ const AccountScreen = () => {
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScrollView contentContainerStyle={styles.page}>
           <View style={styles.cardWrapper}>
-          <BlurView intensity={30} tint="light" style={StyleSheet.absoluteFillObject} />
+          <BlurView intensity={30} tint="light" style={StyleSheet.absoluteFill} />
           <View style={styles.card}>
             <Text style={styles.title}>{mode === "signIn" ? "Sign In" : "Sign Up"}</Text>
             <Text style={styles.subtitle}>
@@ -134,6 +157,9 @@ const AccountScreen = () => {
                 onChangeText={(text) => { setEmail(text); if (errors.email) setErrors((prev) => ({ ...prev, email: false })); }}
                 autoCapitalize="none"
                 keyboardType="email-address"
+                autoCorrect={false}
+                autoComplete="email"
+                textContentType="emailAddress"
               />
             </View>
 
@@ -159,8 +185,12 @@ const AccountScreen = () => {
               </View>
             )}
 
-            <Pressable disabled={submitting} style={styles.submitButton} onPress={submit}>
-              <Text style={styles.submitText}>{mode === "signIn" ? "Sign In" : "Sign Up"}</Text>
+            <Pressable disabled={submitting} style={[styles.submitButton, submitting && { opacity: 0.6 }]} onPress={submit}>
+              {submitting ? (
+                <ActivityIndicator color="white" />
+              ) : (
+                <Text style={styles.submitText}>{mode === "signIn" ? "Sign In" : "Sign Up"}</Text>
+              )}
             </Pressable>
 
             <Pressable onPress={() => { setMode(mode === "signIn" ? "signUp" : "signIn"); resetForm(); }}>
