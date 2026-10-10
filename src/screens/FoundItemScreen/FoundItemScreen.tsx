@@ -48,19 +48,14 @@ const FoundItemScreen = () => {
     return valid;
   };
 
-  const pickImage = async (fromCamera: boolean) => {
-    const permission = fromCamera
-      ? await ImagePicker.requestCameraPermissionsAsync()
-      : await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-    if (!permission.granted) {
-      Alert.alert("Permission required", "Camera or media access is required.");
+  const takePhoto = async () => {
+    const { granted } = await ImagePicker.requestCameraPermissionsAsync();
+    if (!granted) {
+      Alert.alert("Permission required", "Camera access is required to photograph the item.");
       return;
     }
 
-    const result = fromCamera
-      ? await ImagePicker.launchCameraAsync({ allowsEditing: true, quality: 0.7 })
-      : await ImagePicker.launchImageLibraryAsync({ mediaTypes: ["images"], allowsEditing: true, quality: 0.7 });
+    const result = await ImagePicker.launchCameraAsync({ mediaTypes: ["images"], allowsEditing: true, quality: 0.7 });
 
     if (!result.canceled && result.assets.length > 0) {
       const uri = result.assets[0].uri;
@@ -71,21 +66,6 @@ const FoundItemScreen = () => {
       if (url) setUploadedUrl(url);
       else Alert.alert("Error", "Upload failed");
     }
-  };
-
-  const pickImageOption = () => {
-    // Alert.alert with a button list doesn't render on web, so the
-    // Camera/Library choice would silently do nothing there.
-    if (Platform.OS === "web") {
-      pickImage(false);
-      return;
-    }
-
-    Alert.alert("Add Photo", "Choose an option", [
-      { text: "Camera", onPress: () => pickImage(true) },
-      { text: "Library", onPress: () => pickImage(false) },
-      { text: "Cancel", style: "cancel" },
-    ]);
   };
 
   const saveItem = async () => {
@@ -151,8 +131,8 @@ const FoundItemScreen = () => {
             <Text style={styles.title}>Found Item</Text>
             <Text style={styles.subtitle}>Post something you found</Text>
 
-            <Pressable style={styles.imageBox} onPress={pickImageOption}>
-              {imageUri ? <Image source={{ uri: imageUri }} style={styles.image} /> : <Text style={styles.imageText}>Tap to add photo</Text>}
+            <Pressable style={styles.imageBox} onPress={takePhoto}>
+              {imageUri ? <Image source={{ uri: imageUri }} style={styles.image} /> : <Text style={styles.imageText}>Tap to take a photo</Text>}
               {uploading && (
                 <View style={styles.loadingOverlay}>
                   <ActivityIndicator size="large" color="white" />
