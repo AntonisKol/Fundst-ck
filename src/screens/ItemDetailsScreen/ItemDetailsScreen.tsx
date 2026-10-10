@@ -26,7 +26,7 @@ const ItemDetailsScreen = () => {
   const isFound = type === "found";
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView style={styles.page} contentContainerStyle={styles.container}>
       <View style={styles.topBar}>
         <Pressable onPress={() => navigation.goBack()} hitSlop={12}>
           <Text style={styles.backText}>‹ Back</Text>

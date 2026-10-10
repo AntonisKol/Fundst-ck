@@ -2,7 +2,8 @@ import { StyleSheet } from "react-native";
 import { colors } from "../../constants/theme";
 
 export const styles = StyleSheet.create({
-  container: { padding: 20, paddingTop: 60, alignItems: "center", backgroundColor: colors.paper },
+  page: { flex: 1, backgroundColor: colors.paper },
+  container: { flexGrow: 1, padding: 20, paddingTop: 60, paddingBottom: 40, alignItems: "center" },
   topBar: {
     flexDirection: "row",
     alignItems: "center",
