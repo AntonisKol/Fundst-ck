@@ -14,12 +14,12 @@ const Tab = createBottomTabNavigator();
 type IconName = ComponentProps<typeof Ionicons>["name"];
 
 // Outline when inactive, filled when the tab is selected.
-const TAB_ICONS: Record<string, IconName> = {
-  Feed: "newspaper",
-  Post: "add-circle",
-  Map: "map",
-  Messages: "chatbubbles",
-  Settings: "settings",
+const TAB_ICONS: Record<string, { active: IconName; inactive: IconName }> = {
+  Feed: { active: "newspaper", inactive: "newspaper-outline" },
+  Post: { active: "add-circle", inactive: "add-circle-outline" },
+  Map: { active: "map", inactive: "map-outline" },
+  Messages: { active: "chatbubbles", inactive: "chatbubbles-outline" },
+  Settings: { active: "settings", inactive: "settings-outline" },
 };
 
 const TabNavigator = () => {
@@ -31,7 +31,7 @@ const TabNavigator = () => {
         headerShown: false,
         tabBarIcon: ({ focused, color, size }: { focused: boolean; color: string; size: number }) => (
           <Ionicons
-            name={(focused ? TAB_ICONS[route.name] : `${TAB_ICONS[route.name]}-outline`) as IconName}
+            name={TAB_ICONS[route.name][focused ? "active" : "inactive"]}
             size={size}
             color={color}
           />

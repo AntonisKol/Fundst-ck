@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, Pressable, StyleSheet } from "react-native";
+import { View, Text, Pressable, StyleSheet, Keyboard } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import FoundItemScreen from "../FoundItemScreen/FoundItemScreen";
 import LostItemScreen from "../LostItemScreen/LostItemScreen";
@@ -36,7 +36,11 @@ const PostScreen = () => {
           return (
             <Pressable
               key={option.value}
-              onPress={() => setType(option.value)}
+              onPress={() => {
+                // The hidden form stays mounted, so drop focus from its inputs.
+                Keyboard.dismiss();
+                setType(option.value);
+              }}
               style={[styles.option, active && (option.value === "found" ? styles.optionFound : styles.optionLost)]}
             >
               <Text style={[styles.optionText, active && styles.optionTextActive]}>{option.label}</Text>

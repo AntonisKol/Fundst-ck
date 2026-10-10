@@ -5,10 +5,12 @@ export const styles = StyleSheet.create({
   page: { flexGrow: 1, backgroundColor: colors.paper, alignItems: "center", padding: 20, paddingTop: 16 },
   // BlurView on Android doesn't reliably clip to its own borderRadius, so
   // the radius + clipping live on this plain wrapper instead.
-  // Card fills the screen height so Found and Lost (inside the Post tab) are
-  // the same size, with the submit button pinned to the bottom.
-  cardWrapper: { flex: 1, width: "100%", borderRadius: 24, overflow: "hidden" },
-  card: { flex: 1, padding: 24, backgroundColor: "rgba(255,255,255,0.9)" },
+  // flexGrow (not flex: 1) so the card fills leftover screen height - keeping
+  // Found and Lost the same size, with the button pinned to the bottom - but
+  // still grows with its content and scrolls on small screens or with the
+  // keyboard open.
+  cardWrapper: { flexGrow: 1, width: "100%", borderRadius: 24, overflow: "hidden" },
+  card: { flexGrow: 1, padding: 24, backgroundColor: "rgba(255,255,255,0.9)" },
   title: { fontSize: 26, fontWeight: "800", textAlign: "center", marginBottom: 4, color: colors.ink },
   subtitle: { textAlign: "center", color: colors.inkSoft, marginBottom: 16 },
   imageBox: { width: "100%", height: 160, backgroundColor: colors.surfaceMuted, borderRadius: 16, alignItems: "center", justifyContent: "center", marginBottom: 20, overflow: "hidden" },
