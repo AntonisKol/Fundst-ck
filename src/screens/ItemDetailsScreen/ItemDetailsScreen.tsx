@@ -36,7 +36,7 @@ const acknowledgeSafetyTipsOnce = async () => {
   await new Promise<void>((resolve) =>
     Alert.alert("Before you chat", SAFETY_TIPS.map((tip) => `• ${tip}`).join("\n\n"), [
       { text: "I understand", onPress: () => resolve() },
-    ], { cancelable: false })
+    ], { cancelable: false, onDismiss: () => resolve() })
   );
   AsyncStorage.setItem(SAFETY_TIPS_SEEN_KEY, "1").catch(() => {});
 };

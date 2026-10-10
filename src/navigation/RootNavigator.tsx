@@ -1,7 +1,7 @@
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import TabNavigator from "./TabNavigator";
 import { useEffect } from "react";
-import { NavigationContainer, DefaultTheme, createNavigationContainerRef } from "@react-navigation/native";
+import { NavigationContainer, DefaultTheme, createNavigationContainerRef, StackActions } from "@react-navigation/native";
 import LandingPage from "../screens/LandingPage/LandingPage";
 import ItemDetailsScreen from "../screens/ItemDetailsScreen/ItemDetailsScreen";
 import ChatScreen from "../screens/ChatScreen/ChatScreen";
@@ -18,11 +18,13 @@ const navigationRef = createNavigationContainerRef();
 const theme = { ...DefaultTheme, colors: { ...DefaultTheme.colors, background: colors.paper } };
 
  const RootNavigator = () => {
-  // Tapping a message banner opens the Messages tab.
+  // Tapping a message banner opens that chat (or Messages, if it has none).
   useEffect(
     () =>
-      onNotificationTapped(() => {
-        if (navigationRef.isReady()) navigationRef.navigate("MainTabs" as never, { screen: "Messages" } as never);
+      onNotificationTapped((conversationId) => {
+        if (!navigationRef.isReady()) return;
+        if (conversationId) navigationRef.dispatch(StackActions.push("Chat", { conversationId }));
+        else navigationRef.navigate("MainTabs" as never, { screen: "Messages" } as never);
       }),
     []
   );

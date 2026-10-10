@@ -12,8 +12,8 @@ Fundstück is a mobile app for reporting and finding lost and found items in Ber
 - View items on a map, grouped by ZIP code
 - User accounts with email, password, and ZIP code, with email confirmation
 - Anyone can browse; posting requires an account
-- Contact the finder / claim an item (planned)
-- Chat between finder and owner (planned)
+- Private chat between finder and owner, with safety tips and links/emails blocked
+- Unread badge and in-app message banners, switchable in Settings
 - Mark items as returned (planned)
 - Notifications for items in your area (planned)
 
@@ -48,10 +48,15 @@ Find both under **Project Settings → API Keys** in the Supabase dashboard. Use
 
 For a fresh Supabase project, run these in the SQL Editor, in order:
 
-1. `supabase/found_items.sql`
-2. `supabase/lost_items.sql`
-3. `supabase/storage_setup.sql`
-4. `supabase/auth_setup.sql`
+1. `supabase/001_found_items.sql`
+2. `supabase/002_found_items_add_coordinates.sql` (a no-op on fresh projects; for older ones)
+3. `supabase/003_lost_items.sql`
+4. `supabase/004_storage_setup.sql`
+5. `supabase/005_auth_setup.sql`
+6. `supabase/006_chat.sql`
+7. `supabase/007_chat_safety.sql` - without it, only the app enforces the chat rules
+
+New SQL files continue the numbering. If you save them as queries in the Supabase SQL Editor, use the same names (e.g. "006 chat") so the two stay easy to match. `006_chat.sql` and `007_chat_safety.sql` are safe to re-run. When a pull request changes one of them, re-run it after merging.
 
 Under **Authentication → URL Configuration**, set the Site URL to the confirmation page: `https://antoniskol.github.io/Fundst-ck/confirmed/`.
 

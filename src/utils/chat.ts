@@ -105,14 +105,18 @@ export const fetchConversations = (userId: string) =>
     const unread = new Map<string, number>();
     unreadRes.data.forEach(({ conversation_id }) => unread.set(conversation_id, (unread.get(conversation_id) || 0) + 1));
 
-    // Item details live in two tables; fetch each table's items in one query.
-    const idsByType = (type: ItemType) => convRes.data.filter((c) => c.item_type === type).map((c) => c.item_id);
-    const [foundRes, lostRes] = await Promise.all(
-      (["found", "lost"] as ItemType[]).map((type) =>
-        supabase.from(`${type}_items`).select("id, category, location, image_url").in("id", idsByType(type))
-      )
-    );
-    const items = new Map([...(foundRes.data || []), ...(lostRes.data || [])].map((item) => [item.id, item]));
+    // Item details live in two tables; fetch each table's items in one query,
+    // skipping tables with no items to look up.
+    const fetchItems = async (type: ItemType) => {
+      const ids = convRes.data.filter((c) => c.item_type === type).map((c) => c.item_id);
+      if (ids.length === 0) return [];
+      const { data, error } = await supabase.from(`${type}_items`).select("id, category, location, image_url").in("id", ids);
+      // Missing item details aren't fatal - the row shows "Item removed".
+      if (error) console.error(`Supabase fetch ${type}_items for conversations error:`, error);
+      return data || [];
+    };
+    const [found, lost] = await Promise.all([fetchItems("found"), fetchItems("lost")]);
+    const items = new Map([...found, ...lost].map((item) => [item.id, item]));
 
     const conversations: ConversationSummary[] = convRes.data.map(({ messages, ...conv }) => ({
       ...conv,

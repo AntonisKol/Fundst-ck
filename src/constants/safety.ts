@@ -8,7 +8,7 @@ export const SAFETY_TIPS = [
 
 export const CHAT_INPUT_PLACEHOLDER = "Message (no links or emails)";
 
-// Keep in sync with the patterns in supabase/chat_safety.sql, which enforces
+// Keep in sync with the patterns in supabase/007_chat_safety.sql, which enforces
 // the same rules server-side.
 const BLOCKED_CONTENT: { pattern: RegExp; reason: string }[] = [
   // Emails first: their domain part would otherwise match as a link.
@@ -17,7 +17,9 @@ const BLOCKED_CONTENT: { pattern: RegExp; reason: string }[] = [
     reason: "Email addresses aren't allowed in chat. Keep the conversation in the app.",
   },
   {
-    pattern: /(https?:\/\/|www\.|\b[a-z0-9-]+\.(com|de|net|org|io|info|biz|eu|me|co|app|link|ly|xyz|shop|online|site)\b)/i,
+    // Any domain-like word ("discord.gg", "x.ru") or IP address, not just
+    // known TLDs. Costs some false positives ("Hi.How are you") by design.
+    pattern: /(https?:\/\/|www\.|\b[a-z0-9-]+\.[a-z]{2,}\b|\b\d{1,3}(\.\d{1,3}){3}\b)/i,
     reason: "Links aren't allowed in chat, to protect you from phishing.",
   },
 ];

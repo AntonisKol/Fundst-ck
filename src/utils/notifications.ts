@@ -45,9 +45,15 @@ export const requestNotificationPermission = async () => {
   }
 };
 
+const PREVIEW_LENGTH = 100;
+
 export const showMessageNotification = (body: string, conversationId: string) =>
   Notifications.scheduleNotificationAsync({
-    content: { title: "New message", body, data: { conversationId } },
+    content: {
+      title: "New message",
+      body: body.length > PREVIEW_LENGTH ? `${body.slice(0, PREVIEW_LENGTH).trimEnd()}…` : body,
+      data: { conversationId },
+    },
     trigger: null,
   }).catch((err) => console.error("Show notification error:", err));
 

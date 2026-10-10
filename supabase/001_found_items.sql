@@ -1,12 +1,8 @@
 -- Run this in the Supabase SQL editor for this project.
 -- Creates the found_items table for a fresh project. Older projects already
--- have it (see found_items_add_coordinates.sql), so this is a no-op there.
+-- have it (see 002_found_items_add_coordinates.sql), so this is a no-op there.
 --
--- Fresh project run order:
---   1. found_items.sql
---   2. lost_items.sql
---   3. storage_setup.sql
---   4. auth_setup.sql
+-- Run the files in this folder in numeric order.
 
 create table if not exists public.found_items (
   id uuid primary key default gen_random_uuid(),

@@ -1,6 +1,6 @@
 -- Run this in the Supabase SQL editor for this project.
 -- Private 1:1 chat between an item's poster and someone contacting them
--- about it. Run after auth_setup.sql (items need a user_id).
+-- about it. Run after 005_auth_setup.sql (items need a user_id).
 
 create table if not exists public.conversations (
   id uuid primary key default gen_random_uuid(),
@@ -44,7 +44,7 @@ returns boolean
 language sql
 stable
 security definer
-set search_path = public
+set search_path = public, pg_temp
 as $$
   select exists (
     select 1 from public.conversations
@@ -73,7 +73,7 @@ create or replace function public.start_conversation(p_item_type text, p_item_id
 returns uuid
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, pg_temp
 as $$
 declare
   v_owner uuid;
@@ -117,7 +117,7 @@ create or replace function public.mark_conversation_read(p_conversation_id uuid)
 returns void
 language sql
 security definer
-set search_path = public
+set search_path = public, pg_temp
 as $$
   update public.messages
   set read_at = now()
@@ -132,7 +132,7 @@ create or replace function public.touch_conversation()
 returns trigger
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, pg_temp
 as $$
 begin
   update public.conversations set last_message_at = new.created_at where id = new.conversation_id;
@@ -145,10 +145,14 @@ create trigger messages_touch_conversation
   after insert on public.messages
   for each row execute function public.touch_conversation();
 
+-- Only signed-in users may call these; trigger functions aren't callable directly.
 revoke execute on function public.start_conversation(text, uuid) from public, anon;
 revoke execute on function public.mark_conversation_read(uuid) from public, anon;
+revoke execute on function public.is_conversation_participant(uuid) from public, anon;
+revoke execute on function public.touch_conversation() from public, anon, authenticated;
 grant execute on function public.start_conversation(text, uuid) to authenticated;
 grant execute on function public.mark_conversation_read(uuid) to authenticated;
+grant execute on function public.is_conversation_participant(uuid) to authenticated;
 
 -- Realtime respects the select policies above, so each user only receives
 -- messages from their own conversations.

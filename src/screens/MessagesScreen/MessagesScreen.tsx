@@ -26,11 +26,13 @@ const MessagesScreen = () => {
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!userId) return;
-    const { data } = await fetchConversations(userId);
+    const { data, error } = await fetchConversations(userId);
     if (data) setConversations(data);
+    setLoadError(error);
     setLoading(false);
   }, [userId]);
 
@@ -96,9 +98,15 @@ const MessagesScreen = () => {
           contentContainerStyle={[styles.list, { paddingTop: insets.top + 16 }]}
           ListHeaderComponent={<Text style={styles.title}>Messages</Text>}
           ListEmptyComponent={
-            <Text style={styles.empty}>
-              No conversations yet.{"\n"}Open an item and tap the contact button to start one.
-            </Text>
+            loadError ? (
+              <Text style={styles.empty}>
+                Couldn't load your messages.{"\n"}Pull down to try again.
+              </Text>
+            ) : (
+              <Text style={styles.empty}>
+                No conversations yet.{"\n"}Open an item and tap the contact button to start one.
+              </Text>
+            )
           }
           refreshControl={
             <RefreshControl
