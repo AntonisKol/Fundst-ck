@@ -23,6 +23,7 @@ export const styles = StyleSheet.create({
   chipTextSelected: { color: "white", fontWeight: "700" },
   input: { backgroundColor: colors.surface, borderRadius: 12, borderWidth: 1, borderColor: colors.border, padding: 12, fontSize: 15 },
   noteInput: { minHeight: 80, textAlignVertical: "top" },
+  hint: { marginTop: 6, fontSize: 12, lineHeight: 17, color: colors.inkSoft },
   errorInput: { borderColor: colors.lost },
   saveButton: { marginTop: 15, paddingVertical: 16, borderRadius: 14, alignItems: "center", backgroundColor: colors.found },
   saveText: { color: "white", fontSize: 16, fontWeight: "700", letterSpacing: 0.5 },

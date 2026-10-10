@@ -15,6 +15,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { supabase } from "../../supabase/supabase";
 import { useAuth } from "../../context/AuthContext";
 import { fetchMessages, sendMessage, markConversationRead, Message } from "../../utils/chat";
+import { blockedContentReason, CHAT_INPUT_PLACEHOLDER } from "../../constants/safety";
+import SafetyNotice from "../../components/SafetyNotice";
 import { colors } from "../../constants/theme";
 import { styles } from "./styled";
 
@@ -72,6 +74,12 @@ const ChatScreen = () => {
     const body = draft.trim();
     if (!body || !userId || sending) return;
 
+    const blockedReason = blockedContentReason(body);
+    if (blockedReason) {
+      Alert.alert("Message not sent", blockedReason);
+      return;
+    }
+
     setSending(true);
     const { data, error } = await sendMessage(conversationId, userId, body);
     setSending(false);
@@ -117,6 +125,7 @@ const ChatScreen = () => {
           contentContainerStyle={styles.list}
           keyboardShouldPersistTaps="handled"
           onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: false })}
+          ListHeaderComponent={<SafetyNotice />}
           ListEmptyComponent={<Text style={styles.empty}>No messages yet. Say hi!</Text>}
         />
       )}
@@ -124,7 +133,7 @@ const ChatScreen = () => {
       <View style={[styles.inputBar, { paddingBottom: insets.bottom + 8 }]}>
         <TextInput
           style={styles.input}
-          placeholder="Message"
+          placeholder={CHAT_INPUT_PLACEHOLDER}
           placeholderTextColor={colors.inkSoft}
           value={draft}
           onChangeText={setDraft}

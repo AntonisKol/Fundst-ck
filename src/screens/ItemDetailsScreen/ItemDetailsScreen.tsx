@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { Text, Image, ScrollView, View, Alert, Pressable, ActivityIndicator } from "react-native";
 import { useNavigation, useRoute, StackActions } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAuth } from "../../context/AuthContext";
 import { startConversation, otherPartyLabel, chatTitle } from "../../utils/chat";
+import { SAFETY_TIPS } from "../../constants/safety";
 import { styles } from "./styled";
 
 export type ItemType = "found" | "lost";
@@ -18,6 +20,25 @@ type RootStackParamList = {
     notes?: string;
     created_at: string;
   };
+};
+
+const SAFETY_TIPS_SEEN_KEY = "safetyTipsSeen";
+
+// Shows the safety tips the first time a user starts a chat on this device.
+// Resolves once they've acknowledged them (or straight away if seen before).
+const acknowledgeSafetyTipsOnce = async () => {
+  try {
+    if (await AsyncStorage.getItem(SAFETY_TIPS_SEEN_KEY)) return;
+  } catch {
+    // Storage unavailable - just show the tips.
+  }
+
+  await new Promise<void>((resolve) =>
+    Alert.alert("Before you chat", SAFETY_TIPS.map((tip) => `• ${tip}`).join("\n\n"), [
+      { text: "I understand", onPress: () => resolve() },
+    ], { cancelable: false })
+  );
+  AsyncStorage.setItem(SAFETY_TIPS_SEEN_KEY, "1").catch(() => {});
 };
 
 const ItemDetailsScreen = () => {
@@ -36,6 +57,8 @@ const ItemDetailsScreen = () => {
       navigation.navigate("MainTabs" as never, { screen: "Account" } as never);
       return;
     }
+
+    await acknowledgeSafetyTipsOnce();
 
     setStarting(true);
     const { data: conversationId, error } = await startConversation(type, id);

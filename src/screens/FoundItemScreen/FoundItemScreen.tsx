@@ -168,6 +168,9 @@ const FoundItemScreen = () => {
                 multiline
                 returnKeyType="done"
               />
+              <Text style={styles.hint}>
+                Don't show serial numbers, ID cards or distinguishing details in the photo or notes. Keep them to check who the real owner is.
+              </Text>
             </View>
 
             <Pressable disabled={uploading} style={styles.saveButton} onPress={saveItem}>
