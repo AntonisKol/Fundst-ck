@@ -20,6 +20,7 @@ type ItemType = "found" | "lost";
 
 interface FeedItem {
   id: string;
+  user_id: string | null;
   image_url: string | null;
   category: string | null;
   location: string;
@@ -31,6 +32,7 @@ interface FeedItem {
 type RootStackParamList = {
   ItemDetails: {
     id: string;
+    user_id: string | null;
     type: ItemType;
     image_url: string | null;
     category: string;
@@ -109,6 +111,7 @@ const FoundItemsFeed = () => {
         style={styles.item}
         onPress={() => navigation.dispatch(StackActions.push("ItemDetails", {
           id: item.id,
+          user_id: item.user_id,
           type: item.type,
           image_url: item.image_url,
           category: realCategory,

@@ -1,13 +1,16 @@
-import { Text, Image, ScrollView, View, Alert, Pressable } from "react-native";
-import { useNavigation, useRoute } from "@react-navigation/native";
+import { useState } from "react";
+import { Text, Image, ScrollView, View, Alert, Pressable, ActivityIndicator } from "react-native";
+import { useNavigation, useRoute, StackActions } from "@react-navigation/native";
+import { useAuth } from "../../context/AuthContext";
+import { startConversation, otherPartyLabel, chatTitle } from "../../utils/chat";
 import { styles } from "./styled";
-import React from "react";
 
 export type ItemType = "found" | "lost";
 
 type RootStackParamList = {
   ItemDetails: {
     id: string;
+    user_id: string | null;
     type: ItemType;
     image_url: string | null;
     category: string | null;
@@ -20,10 +23,55 @@ type RootStackParamList = {
 const ItemDetailsScreen = () => {
   const route = useRoute();
   const navigation = useNavigation();
-  const { type, image_url, category, location, notes } =
+  const { session } = useAuth();
+  const [starting, setStarting] = useState(false);
+  const { id, user_id, type, image_url, category, location, notes } =
     route.params as RootStackParamList["ItemDetails"];
 
   const isFound = type === "found";
+  const isMine = !!session && session.user.id === user_id;
+
+  const contact = async () => {
+    if (!session) {
+      navigation.navigate("MainTabs" as never, { screen: "Account" } as never);
+      return;
+    }
+
+    setStarting(true);
+    const { data: conversationId, error } = await startConversation(type, id);
+    setStarting(false);
+
+    if (error !== null) {
+      Alert.alert("Couldn't start chat", error);
+      return;
+    }
+    const title = chatTitle(otherPartyLabel(type, false), category, location);
+    navigation.dispatch(StackActions.push("Chat", { conversationId, title }));
+  };
+
+  const renderAction = () => {
+    if (isMine) return <Text style={styles.ownPostNote}>This is your post</Text>;
+    // Posts from before accounts existed have no poster to contact.
+    if (!user_id) return <Text style={styles.ownPostNote}>The poster of this item can't be contacted</Text>;
+
+    return (
+      <Pressable
+        disabled={starting}
+        style={[styles.actionButton, isFound ? styles.actionButtonFound : styles.actionButtonLost, starting && { opacity: 0.6 }]}
+        onPress={contact}
+      >
+        {starting ? (
+          <ActivityIndicator color="white" />
+        ) : (
+          <Text style={styles.actionButtonText}>
+            {!session
+              ? "Sign in to contact"
+              : isFound ? "This is mine · Contact finder" : "I found this · Contact owner"}
+          </Text>
+        )}
+      </Pressable>
+    );
+  };
 
   return (
     <ScrollView style={styles.page} contentContainerStyle={styles.container}>
@@ -54,14 +102,7 @@ const ItemDetailsScreen = () => {
         </>
       )}
 
-      <Pressable
-        style={[styles.actionButton, isFound ? styles.actionButtonFound : styles.actionButtonLost]}
-        onPress={() => Alert.alert("Coming soon", "This feature isn't available yet.")}
-      >
-        <Text style={styles.actionButtonText}>
-          {isFound ? "Claim / Contact Finder" : "This is mine / Contact reporter"}
-        </Text>
-      </Pressable>
+      {renderAction()}
     </ScrollView>
   );
 };

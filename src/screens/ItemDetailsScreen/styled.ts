@@ -24,5 +24,6 @@ export const styles = StyleSheet.create({
   actionButton: { alignSelf: "stretch", marginTop: 20, paddingVertical: 16, borderRadius: 14, alignItems: "center" },
   actionButtonFound: { backgroundColor: colors.found },
   actionButtonLost: { backgroundColor: colors.lost },
+  ownPostNote: { marginTop: 24, color: colors.inkSoft, fontStyle: "italic", textAlign: "center" },
   actionButtonText: { color: "white", fontSize: 16, fontWeight: "700", letterSpacing: 0.5 },
 });

@@ -1,8 +1,8 @@
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import FoundItemScreen from "../screens/FoundItemScreen/FoundItemScreen";
 import FoundItemsFeed from "../screens/FoundItemsFeed/FoundItemsFeed";
+import PostScreen from "../screens/PostScreen/PostScreen";
 import MapScreen from "../screens/MapScreen/MapScreen";
-import LostItemScreen from "../screens/LostItemScreen/LostItemScreen";
+import MessagesScreen from "../screens/MessagesScreen/MessagesScreen";
 import AccountScreen from "../screens/AccountScreen/AccountScreen";
 import { colors } from "../constants/theme";
 
@@ -25,12 +25,11 @@ const TabNavigator = () => {
         },
       }}
     >
-    <Tab.Screen name="Feed" component={FoundItemsFeed} />
-      <Tab.Screen name="Found" component={FoundItemScreen} />
-      <Tab.Screen name="Lost" component={LostItemScreen} />
+      <Tab.Screen name="Feed" component={FoundItemsFeed} />
+      <Tab.Screen name="Post" component={PostScreen} />
       <Tab.Screen name="Map" component={MapScreen} options={{ title: "Map" }} />
+      <Tab.Screen name="Messages" component={MessagesScreen} />
       <Tab.Screen name="Account" component={AccountScreen} />
-
     </Tab.Navigator>
   );
 }

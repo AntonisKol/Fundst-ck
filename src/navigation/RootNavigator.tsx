@@ -3,6 +3,7 @@ import TabNavigator from "./TabNavigator";
 import { NavigationContainer, DefaultTheme } from "@react-navigation/native";
 import LandingPage from "../screens/LandingPage/LandingPage";
 import ItemDetailsScreen from "../screens/ItemDetailsScreen/ItemDetailsScreen";
+import ChatScreen from "../screens/ChatScreen/ChatScreen";
 import { colors } from "../constants/theme";
 
 const Stack = createNativeStackNavigator();
@@ -19,6 +20,7 @@ const theme = { ...DefaultTheme, colors: { ...DefaultTheme.colors, background: c
       <Stack.Screen name="Landing" component={LandingPage} />
       <Stack.Screen name="MainTabs" component={TabNavigator} />
       <Stack.Screen name="ItemDetails" component={ItemDetailsScreen} />
+      <Stack.Screen name="Chat" component={ChatScreen} />
     </Stack.Navigator>
   </NavigationContainer>
   );
