@@ -15,6 +15,6 @@ export const styles = StyleSheet.create({
   optionLost: { backgroundColor: colors.lost },
   optionText: { color: colors.ink, fontWeight: "600" },
   optionTextActive: { color: "white", fontWeight: "700" },
-  form: { flex: 1 },
-  hidden: { display: "none" },
+  forms: { flex: 1 },
+  hidden: { opacity: 0 },
 });
