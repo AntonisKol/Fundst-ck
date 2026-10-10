@@ -148,7 +148,7 @@ const LostItemScreen = () => {
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        <ScrollView contentContainerStyle={styles.page}>
+        <ScrollView contentContainerStyle={styles.page} contentInsetAdjustmentBehavior="never">
           <View style={styles.cardWrapper}>
           <BlurView intensity={30} tint="light" style={StyleSheet.absoluteFill} />
           <View style={styles.card}>

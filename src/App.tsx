@@ -1,5 +1,7 @@
 import { useEffect } from "react";
 import { AppState } from "react-native";
+import { useFonts } from "expo-font";
+import { Ionicons } from "@expo/vector-icons";
 import RootNavigator from "./navigation/RootNavigator";
 import { AuthProvider } from "./context/AuthContext";
 import { UnreadProvider } from "./context/UnreadContext";
@@ -19,6 +21,9 @@ const useSupabaseAuthRefresh = () => {
 
 const App = () => {
   useSupabaseAuthRefresh();
+  // Preload the tab bar icon font so icons don't flash in empty.
+  const [fontsLoaded, fontError] = useFonts(Ionicons.font);
+  if (!fontsLoaded && !fontError) return null;
 
   return (
     <AuthProvider>
