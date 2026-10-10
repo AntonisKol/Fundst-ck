@@ -6,6 +6,10 @@ export const SAFETY_TIPS = [
   "Links and email addresses can't be sent in chat, to protect you from phishing.",
 ];
 
+// Found items that usually belong with the police or a Fundbüro: valuable,
+// or holding IDs, bank cards or personal data.
+export const HAND_IN_CATEGORIES = ["Documents", "Bank card", "Wallet", "Phone", "Keys", "Electronics", "Jewelry"];
+
 export const CHAT_INPUT_PLACEHOLDER = "Message (no links or emails)";
 
 // Keep in sync with the patterns in supabase/007_chat_safety.sql, which enforces
