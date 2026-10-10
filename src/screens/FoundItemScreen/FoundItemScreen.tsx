@@ -22,6 +22,8 @@ import { CATEGORIES } from "../../constants/categories";
 import DismissKeyboardOnTap from "../../components/DismissKeyboardOnTap";
 import ZipCodePicker from "../../components/ZipCodePicker";
 import RequireAuthPrompt from "../../components/RequireAuthPrompt";
+import HandInNotice from "../../components/HandInNotice";
+import { HAND_IN_CATEGORIES } from "../../constants/safety";
 import { useAuth } from "../../context/AuthContext";
 import { styles } from "./styled";
 
@@ -142,7 +144,10 @@ const FoundItemScreen = () => {
             </Pressable>
 
             <View style={styles.formGroup}>
-              <Text style={styles.label}>Category *</Text>
+              <View style={styles.labelRow}>
+                <Text style={[styles.label, styles.labelInRow]}>Category *</Text>
+                {HAND_IN_CATEGORIES.includes(category) && <HandInNotice />}
+              </View>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipContainer}>
                 {CATEGORIES.map(renderCategoryChip)}
               </ScrollView>

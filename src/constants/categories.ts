@@ -1,12 +1,16 @@
+// Ordered from most sensitive (IDs, money, personal data) to least.
 export const CATEGORIES = [
-  "Phone",
-  "Wallet",
-  "Keys",
-  "Bag / Backpack",
-  "Clothing",
-  "Jewelry",
-  "Electronics",
   "Documents",
+  "Bank card",
+  "Wallet",
+  "Phone",
+  "Keys",
+  "Electronics",
+  "Jewelry",
+  "Bag / Backpack",
   "Glasses",
+  "Clothing",
+  "Umbrella",
+  "Toys",
   "Other",
 ];
