@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -40,7 +40,6 @@ const ChatScreen = () => {
   const [loading, setLoading] = useState(true);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
-  const listRef = useRef<FlatList<Message>>(null);
   const { setActiveConversation } = useUnread();
 
   // No banners for the chat that's already on screen.
@@ -115,6 +114,10 @@ const ChatScreen = () => {
 
   const canSend = draft.trim().length > 0 && !sending;
 
+  // The list is inverted - the standard chat layout - so it opens at the
+  // newest message and stays there as messages arrive. It wants newest first.
+  const newestFirst = useMemo(() => [...messages].reverse(), [messages]);
+
   return (
     <KeyboardAvoidingView style={styles.page} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <View style={[styles.topBar, { paddingTop: insets.top + 8 }]}>
@@ -127,17 +130,22 @@ const ChatScreen = () => {
 
       {loading ? (
         <ActivityIndicator size="large" color={colors.ink} style={{ marginTop: 40 }} />
+      ) : messages.length === 0 ? (
+        // Rendered outside the inverted list, which would flip it upside down.
+        <View style={[styles.list, styles.emptyContainer]}>
+          <SafetyNotice />
+          <Text style={styles.empty}>No messages yet. Say hi!</Text>
+        </View>
       ) : (
         <FlatList
-          ref={listRef}
-          data={messages}
+          inverted
+          data={newestFirst}
           keyExtractor={(m) => m.id}
           renderItem={renderMessage}
           contentContainerStyle={styles.list}
           keyboardShouldPersistTaps="handled"
-          onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: false })}
-          ListHeaderComponent={<SafetyNotice />}
-          ListEmptyComponent={<Text style={styles.empty}>No messages yet. Say hi!</Text>}
+          // In an inverted list the footer sits above the oldest message.
+          ListFooterComponent={<SafetyNotice />}
         />
       )}
 

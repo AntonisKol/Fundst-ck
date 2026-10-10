@@ -16,6 +16,7 @@ export const styles = StyleSheet.create({
   topBarTitle: { flex: 1, textAlign: "center", fontSize: 16, fontWeight: "700", color: colors.ink, marginHorizontal: 8 },
   topBarSpacer: { width: 50 },
   list: { paddingHorizontal: 16, paddingVertical: 12 },
+  emptyContainer: { flex: 1 },
   empty: { textAlign: "center", color: colors.inkSoft, marginTop: 40, paddingHorizontal: 20 },
   bubble: { maxWidth: "80%", paddingVertical: 10, paddingHorizontal: 14, borderRadius: 18, marginVertical: 3 },
   bubbleMine: { alignSelf: "flex-end", backgroundColor: colors.stamp, borderBottomRightRadius: 4 },
