@@ -18,8 +18,8 @@ const RequireAuthPrompt = ({ message }: Props) => {
           <Text style={styles.title}>Sign in required</Text>
           <Text style={styles.subtitle}>{message}</Text>
 
-          <Pressable style={styles.button} onPress={() => navigation.navigate("Account" as never)}>
-            <Text style={styles.buttonText}>Go to Account</Text>
+          <Pressable style={styles.button} onPress={() => navigation.navigate("Settings" as never)}>
+            <Text style={styles.buttonText}>Sign in</Text>
           </Pressable>
         </View>
       </View>

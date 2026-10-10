@@ -28,7 +28,8 @@
           "backgroundColor": "#2B2D30",
           "imageWidth": 200
         }
-      ]
+      ],
+      "expo-notifications"
     ]
   }
 }

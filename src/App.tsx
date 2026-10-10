@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { AppState } from "react-native";
 import RootNavigator from "./navigation/RootNavigator";
 import { AuthProvider } from "./context/AuthContext";
+import { UnreadProvider } from "./context/UnreadContext";
 import { supabase } from "./supabase/supabase";
 
 // Keeps the auth token refreshed while the app is foregrounded, and stops
@@ -21,7 +22,9 @@ const App = () => {
 
   return (
     <AuthProvider>
-      <RootNavigator />
+      <UnreadProvider>
+        <RootNavigator />
+      </UnreadProvider>
     </AuthProvider>
   );
 }

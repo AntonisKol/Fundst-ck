@@ -10,10 +10,11 @@ import {
   Platform,
   Alert,
 } from "react-native";
-import { useNavigation, useRoute } from "@react-navigation/native";
+import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { supabase } from "../../supabase/supabase";
 import { useAuth } from "../../context/AuthContext";
+import { useUnread } from "../../context/UnreadContext";
 import { fetchMessages, sendMessage, markConversationRead, Message } from "../../utils/chat";
 import { blockedContentReason, CHAT_INPUT_PLACEHOLDER } from "../../constants/safety";
 import SafetyNotice from "../../components/SafetyNotice";
@@ -39,6 +40,15 @@ const ChatScreen = () => {
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const listRef = useRef<FlatList<Message>>(null);
+  const { setActiveConversation } = useUnread();
+
+  // No banners for the chat that's already on screen.
+  useFocusEffect(
+    useCallback(() => {
+      setActiveConversation(conversationId);
+      return () => setActiveConversation(null);
+    }, [conversationId, setActiveConversation])
+  );
 
   // Realtime and our own insert can both deliver the same message.
   const addMessage = useCallback((message: Message) => {

@@ -54,7 +54,7 @@ const ItemDetailsScreen = () => {
 
   const contact = async () => {
     if (!session) {
-      navigation.navigate("MainTabs" as never, { screen: "Account" } as never);
+      navigation.navigate("MainTabs" as never, { screen: "Settings" } as never);
       return;
     }
 

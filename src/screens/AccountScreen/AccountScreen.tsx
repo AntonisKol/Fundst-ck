@@ -19,6 +19,7 @@ import { useAuth } from "../../context/AuthContext";
 import { colors } from "../../constants/theme";
 import ZipCodePicker from "../../components/ZipCodePicker";
 import DismissKeyboardOnTap from "../../components/DismissKeyboardOnTap";
+import SettingsView from "./SettingsView";
 import { styles } from "./styled";
 
 const AccountScreen = () => {
@@ -98,43 +99,11 @@ const AccountScreen = () => {
     }
   };
 
-  const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) Alert.alert("Error", error.message);
-  };
-
   if (loading) {
     return <ActivityIndicator size="large" color={colors.ink} style={{ marginTop: 60 }} />;
   }
 
-  if (session) {
-    const zipCode = session.user.user_metadata?.zip_code;
-    return (
-      <ScrollView contentContainerStyle={styles.page}>
-        <View style={styles.cardWrapper}>
-        <BlurView intensity={30} tint="light" style={StyleSheet.absoluteFill} />
-        <View style={styles.card}>
-          <Text style={styles.title}>Account</Text>
-          <Text style={styles.subtitle}>You're signed in</Text>
-
-          <Text style={styles.profileLabel}>Email</Text>
-          <Text style={styles.profileValue}>{session.user.email}</Text>
-
-          {zipCode ? (
-            <>
-              <Text style={styles.profileLabel}>ZIP Code</Text>
-              <Text style={styles.profileValue}>{zipCode}</Text>
-            </>
-          ) : null}
-
-          <Pressable style={styles.signOutButton} onPress={signOut}>
-            <Text style={styles.signOutText}>Sign Out</Text>
-          </Pressable>
-        </View>
-        </View>
-      </ScrollView>
-    );
-  }
+  if (session) return <SettingsView session={session} />;
 
   return (
     <DismissKeyboardOnTap>
