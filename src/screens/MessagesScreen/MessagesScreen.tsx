@@ -96,7 +96,15 @@ const MessagesScreen = () => {
           keyExtractor={(c) => c.id}
           renderItem={renderConversation}
           contentContainerStyle={[styles.list, { paddingTop: insets.top + 16 }]}
-          ListHeaderComponent={<Text style={styles.title}>Messages</Text>}
+          ListHeaderComponent={
+            <>
+              <Text style={styles.title}>Messages</Text>
+              {/* With chats already listed, keep them and flag the failed refresh. */}
+              {loadError && conversations.length > 0 && (
+                <Text style={styles.refreshError}>Couldn't refresh. Pull down to try again.</Text>
+              )}
+            </>
+          }
           ListEmptyComponent={
             loadError ? (
               <Text style={styles.empty}>
