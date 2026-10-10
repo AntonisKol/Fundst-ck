@@ -60,9 +60,17 @@ jobs:
 
           # Issue number from the branch name: "<type>/<number>-<slug>".
           issues=$(echo "$BRANCH" | grep -oE '(^|/)[0-9]+-' | grep -oE '[0-9]+' || true)
+          owner="${REPO%/*}"; name="${REPO#*/}"
+
+          # Plain GraphQL throughout: the gh issue/pr/project subcommands demand
+          # extra token scopes (read:org, read:discussion) this job doesn't need.
+
           # Plus issues the PR closes ("Closes #N").
           if [ -n "$PR_NUMBER" ]; then
-            issues="$issues $(gh pr view "$PR_NUMBER" --repo "$REPO" --json closingIssuesReferences -q '.closingIssuesReferences[].number')"
+            issues="$issues $(gh api graphql \
+              -f query='query($o:String!,$r:String!,$n:Int!){repository(owner:$o,name:$r){pullRequest(number:$n){closingIssuesReferences(first:20){nodes{number}}}}}' \
+              -f o="$owner" -f r="$name" -F n="$PR_NUMBER" \
+              -q '.data.repository.pullRequest.closingIssuesReferences.nodes[].number')"
           fi
           issues=$(echo $issues | tr ' ' '\n' | grep -E '^[0-9]+$' | sort -u || true)
 
@@ -71,20 +79,19 @@ jobs:
             exit 0
           fi
 
-          owner="${REPO%/*}"; name="${REPO#*/}"
           for n in $issues; do
             # Find the issue's card on this project, adding it if missing.
-            item=$(gh api graphql \
-              -f query='query($o:String!,$r:String!,$n:Int!){repository(owner:$o,name:$r){issue(number:$n){projectItems(first:20){nodes{id project{id}}}}}}' \
-              -f o="$owner" -f r="$name" -F n="$n" \
-              -q ".data.repository.issue.projectItems.nodes[] | select(.project.id == \"$PROJECT_ID\") | .id")
+            issue=$(gh api graphql \
+              -f query='query($o:String!,$r:String!,$n:Int!){repository(owner:$o,name:$r){issue(number:$n){id projectItems(first:20){nodes{id project{id}}}}}}' \
+              -f o="$owner" -f r="$name" -F n="$n" -q '.data.repository.issue')
+            item=$(echo "$issue" | jq -r --arg p "$PROJECT_ID" '.projectItems.nodes[] | select(.project.id == $p) | .id')
             if [ -z "$item" ]; then
-              content=$(gh issue view "$n" --repo "$REPO" --json id -q .id)
               item=$(gh api graphql \
                 -f query='mutation($p:ID!,$c:ID!){addProjectV2ItemById(input:{projectId:$p,contentId:$c}){item{id}}}' \
-                -f p="$PROJECT_ID" -f c="$content" -q .data.addProjectV2ItemById.item.id)
+                -f p="$PROJECT_ID" -f c="$(echo "$issue" | jq -r .id)" -q .data.addProjectV2ItemById.item.id)
             fi
-            gh project item-edit --id "$item" --project-id "$PROJECT_ID" \
-              --field-id "$STATUS_FIELD_ID" --single-select-option-id "$status" > /dev/null
+            gh api graphql \
+              -f query='mutation($p:ID!,$i:ID!,$f:ID!,$o:String!){updateProjectV2ItemFieldValue(input:{projectId:$p,itemId:$i,fieldId:$f,value:{singleSelectOptionId:$o}}){projectV2Item{id}}}' \
+              -f p="$PROJECT_ID" -f i="$item" -f f="$STATUS_FIELD_ID" -f o="$status" > /dev/null
             echo "#$n -> $label"
           done
