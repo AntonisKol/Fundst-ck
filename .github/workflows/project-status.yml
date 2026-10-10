@@ -1,0 +1,90 @@
+name: Project status
+
+# Moves issues on the "Fundstück" project board:
+#   branch created  -> In progress
+#   PR opened       -> In review
+#   PR merged       -> Done
+# The issue comes from the branch name (e.g. feature/53-fundbuero-tip) and,
+# for PRs, from "Closes #N" in the description.
+#
+# Needs a classic personal access token with the "project" scope stored as
+# the PROJECT_TOKEN secret: the default GITHUB_TOKEN can't edit projects
+# owned by a user account.
+
+on:
+  create:
+  pull_request:
+    types: [opened, reopened, ready_for_review, closed]
+
+permissions:
+  contents: read
+
+env:
+  PROJECT_ID: PVT_kwHOBCcPGs4BmglG
+  STATUS_FIELD_ID: PVTSSF_lAHOBCcPGs4BmglGzhlJVBM
+  IN_PROGRESS: 2a8f10f9
+  IN_REVIEW: 44280629
+  DONE: 146c39c9
+
+jobs:
+  move-cards:
+    # "create" also fires for tags; only branches matter here.
+    if: github.event_name != 'create' || github.event.ref_type == 'branch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update linked issues
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+          EVENT: ${{ github.event_name }}
+          ACTION: ${{ github.event.action }}
+          MERGED: ${{ github.event.pull_request.merged }}
+          BRANCH: ${{ github.event_name == 'create' && github.event.ref || github.event.pull_request.head.ref }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::warning::PROJECT_TOKEN secret is not set - skipping."
+            exit 0
+          fi
+
+          if [ "$EVENT" = "create" ]; then
+            status="$IN_PROGRESS"; label="In progress"
+          elif [ "$ACTION" = "closed" ]; then
+            if [ "$MERGED" != "true" ]; then echo "PR closed without merging - nothing to do."; exit 0; fi
+            status="$DONE"; label="Done"
+          else
+            status="$IN_REVIEW"; label="In review"
+          fi
+
+          # Issue number from the branch name: "<type>/<number>-<slug>".
+          issues=$(echo "$BRANCH" | grep -oE '(^|/)[0-9]+-' | grep -oE '[0-9]+' || true)
+          # Plus issues the PR closes ("Closes #N").
+          if [ -n "$PR_NUMBER" ]; then
+            issues="$issues $(gh pr view "$PR_NUMBER" --repo "$REPO" --json closingIssuesReferences -q '.closingIssuesReferences[].number')"
+          fi
+          issues=$(echo $issues | tr ' ' '\n' | grep -E '^[0-9]+$' | sort -u || true)
+
+          if [ -z "$issues" ]; then
+            echo "No linked issue for '$BRANCH' - nothing to do."
+            exit 0
+          fi
+
+          owner="${REPO%/*}"; name="${REPO#*/}"
+          for n in $issues; do
+            # Find the issue's card on this project, adding it if missing.
+            item=$(gh api graphql \
+              -f query='query($o:String!,$r:String!,$n:Int!){repository(owner:$o,name:$r){issue(number:$n){projectItems(first:20){nodes{id project{id}}}}}}' \
+              -f o="$owner" -f r="$name" -F n="$n" \
+              -q ".data.repository.issue.projectItems.nodes[] | select(.project.id == \"$PROJECT_ID\") | .id")
+            if [ -z "$item" ]; then
+              content=$(gh issue view "$n" --repo "$REPO" --json id -q .id)
+              item=$(gh api graphql \
+                -f query='mutation($p:ID!,$c:ID!){addProjectV2ItemById(input:{projectId:$p,contentId:$c}){item{id}}}' \
+                -f p="$PROJECT_ID" -f c="$content" -q .data.addProjectV2ItemById.item.id)
+            fi
+            gh project item-edit --id "$item" --project-id "$PROJECT_ID" \
+              --field-id "$STATUS_FIELD_ID" --single-select-option-id "$status" > /dev/null
+            echo "#$n -> $label"
+          done
