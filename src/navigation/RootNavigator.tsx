@@ -17,12 +17,15 @@ const navigationRef = createNavigationContainerRef();
 
 const theme = { ...DefaultTheme, colors: { ...DefaultTheme.colors, background: colors.paper } };
 
- const RootNavigator = () => {
-  // Tapping a message banner opens the Messages tab.
+const RootNavigator = () => {
+  // Tapping a message banner opens that chat (or Messages, if it has none).
   useEffect(
     () =>
-      onNotificationTapped(() => {
-        if (navigationRef.isReady()) navigationRef.navigate("MainTabs" as never, { screen: "Messages" } as never);
+      onNotificationTapped((conversationId) => {
+        if (!navigationRef.isReady()) return;
+        // navigate (not push) finds the root stack that owns Chat from inside a tab.
+        if (conversationId) navigationRef.navigate("Chat" as never, { conversationId } as never);
+        else navigationRef.navigate("MainTabs" as never, { screen: "Messages" } as never);
       }),
     []
   );

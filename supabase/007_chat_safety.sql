@@ -1,4 +1,4 @@
--- Run this in the Supabase SQL editor for this project, after chat.sql.
+-- Run this in the Supabase SQL editor for this project, after 006_chat.sql.
 -- Server-side chat safety rules. The app checks the same patterns before
 -- sending (src/constants/safety.ts - keep the two in sync), but only this
 -- trigger is binding: it also covers clients that skip the app's checks.
@@ -10,7 +10,7 @@ create or replace function public.check_message_safety()
 returns trigger
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, pg_temp
 as $$
 begin
   -- Emails first: their domain part would otherwise match as a link.
@@ -18,7 +18,8 @@ begin
     raise exception 'Email addresses aren''t allowed in chat. Keep the conversation in the app.';
   end if;
 
-  if new.body ~* '(https?://|www\.|\y[a-z0-9-]+\.(com|de|net|org|io|info|biz|eu|me|co|app|link|ly|xyz|shop|online|site)\y)' then
+  -- Any domain-like word or IP address, not just known TLDs.
+  if new.body ~* '(https?://|www\.|\y[a-z0-9-]+\.[a-z]{2,}\y|\y[0-9]{1,3}(\.[0-9]{1,3}){3}\y)' then
     raise exception 'Links aren''t allowed in chat, to protect you from phishing.';
   end if;
 
@@ -36,6 +37,8 @@ begin
   return new;
 end;
 $$;
+
+revoke execute on function public.check_message_safety() from public, anon, authenticated;
 
 drop trigger if exists messages_check_safety on public.messages;
 create trigger messages_check_safety

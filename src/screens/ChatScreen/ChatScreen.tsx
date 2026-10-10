@@ -23,7 +23,8 @@ import { styles } from "./styled";
 
 export interface ChatParams {
   conversationId: string;
-  title: string;
+  // Missing when opened from a notification.
+  title?: string;
 }
 
 const formatTime = (iso: string) => new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
@@ -120,7 +121,7 @@ const ChatScreen = () => {
         <Pressable onPress={() => navigation.goBack()} hitSlop={12}>
           <Text style={styles.backText}>‹ Back</Text>
         </Pressable>
-        <Text style={styles.topBarTitle} numberOfLines={1}>{title}</Text>
+        <Text style={styles.topBarTitle} numberOfLines={1}>{title ?? "Chat"}</Text>
         <View style={styles.topBarSpacer} />
       </View>
 

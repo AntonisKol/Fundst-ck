@@ -5,6 +5,7 @@ export const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: colors.paper },
   list: { padding: 16, paddingBottom: 120 },
   title: { fontSize: 26, fontWeight: "800", color: colors.ink, marginBottom: 16 },
+  refreshError: { marginTop: -8, marginBottom: 12, color: colors.lost, fontWeight: "600" },
   empty: { textAlign: "center", color: colors.inkSoft, marginTop: 40, lineHeight: 22 },
   row: {
     flexDirection: "row",

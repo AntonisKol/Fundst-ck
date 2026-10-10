@@ -6,7 +6,7 @@ alter table public.found_items add column if not exists user_id uuid references 
 alter table public.lost_items add column if not exists user_id uuid references auth.users(id);
 
 -- lost_items: drop the old "anyone can insert" policy from
--- supabase/lost_items.sql and replace it with an authenticated-only one.
+-- supabase/003_lost_items.sql and replace it with an authenticated-only one.
 drop policy if exists "Public can insert lost items" on public.lost_items;
 
 create policy "Authenticated users can insert own lost items"

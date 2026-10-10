@@ -33,12 +33,13 @@ const acknowledgeSafetyTipsOnce = async () => {
     // Storage unavailable - just show the tips.
   }
 
-  await new Promise<void>((resolve) =>
+  const acknowledged = await new Promise<boolean>((resolve) =>
     Alert.alert("Before you chat", SAFETY_TIPS.map((tip) => `• ${tip}`).join("\n\n"), [
-      { text: "I understand", onPress: () => resolve() },
-    ], { cancelable: false })
+      { text: "I understand", onPress: () => resolve(true) },
+    ], { cancelable: false, onDismiss: () => resolve(false) })
   );
-  AsyncStorage.setItem(SAFETY_TIPS_SEEN_KEY, "1").catch(() => {});
+  // Only an explicit "I understand" counts - a dismissed alert shows again next time.
+  if (acknowledged) AsyncStorage.setItem(SAFETY_TIPS_SEEN_KEY, "1").catch(() => {});
 };
 
 const ItemDetailsScreen = () => {

@@ -44,7 +44,6 @@ export const UnreadProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    requestNotificationPermission();
     refreshCount();
 
     const channel = supabase
@@ -68,6 +67,11 @@ export const UnreadProvider = ({ children }: { children: ReactNode }) => {
       supabase.removeChannel(channel);
     };
   }, [userId, refreshCount]);
+
+  // Only ask for OS permission while the user wants message notifications.
+  useEffect(() => {
+    if (userId && notificationsOn) requestNotificationPermission();
+  }, [userId, notificationsOn]);
 
   const setActiveConversation = useCallback((conversationId: string | null) => {
     activeConversation.current = conversationId;
