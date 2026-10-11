@@ -4,6 +4,22 @@
 
 Fundstück is a mobile app for reporting and finding lost and found items in Berlin. Users can post items they've found, report items they've lost, and browse items in a feed or on a map.
 
+## Screenshots
+
+<table>
+  <tr>
+    <td align="center"><img src="docs/screenshots/01-feed.png" width="200" alt="Feed"><br><sub>Feed</sub></td>
+    <td align="center"><img src="docs/screenshots/02-item-details.png" width="200" alt="Item details"><br><sub>Item details</sub></td>
+    <td align="center"><img src="docs/screenshots/03-map.png" width="200" alt="Map"><br><sub>Map</sub></td>
+    <td align="center"><img src="docs/screenshots/04-post.png" width="200" alt="Post a found item"><br><sub>Post a found item</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/screenshots/05-chat.png" width="200" alt="Chat"><br><sub>Chat</sub></td>
+    <td align="center"><img src="docs/screenshots/06-messages.png" width="200" alt="Messages"><br><sub>Messages</sub></td>
+    <td align="center"><img src="docs/screenshots/07-settings.png" width="200" alt="Settings"><br><sub>Settings</sub></td>
+  </tr>
+</table>
+
 ## Features
 
 - Post found items with a camera photo, category, ZIP code, and notes
@@ -67,3 +83,14 @@ npx expo start --clear
 ```
 
 Scan the QR code with Expo Go (SDK 57). Use `--clear` whenever `.env` changes - its values are compiled into the bundle.
+
+## Regenerating the screenshots
+
+The screenshots above are taken automatically with [Maestro](https://maestro.mobile.dev) on the iOS Simulator (`.maestro/screenshots.yaml`), signed in as a demo account:
+
+```bash
+npx expo start --port 8082   # serve the app; open it once in the simulator's Expo Go
+./scripts/screenshots.sh      # runs the flow and updates docs/screenshots/
+```
+
+The demo login lives outside the repo in `~/fundstueck-demo.txt` (`EMAIL=` and `PASSWORD=` lines).
