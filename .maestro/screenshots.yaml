@@ -1,0 +1,102 @@
+# Takes the README screenshots on the iOS Simulator - see scripts/screenshots.sh.
+# EMAIL and PASSWORD (a demo account) are passed in with -e, never stored here.
+appId: host.exp.Exponent
+name: README screenshots
+env:
+  EXPO_URL: exp://127.0.0.1:8082
+---
+# Feed items and tabs are matched by their accessibility label, which joins
+# all their texts ("FOUND, Wallet, 10997, ..." / "Feed, tab, 1 of 5").
+# Close Expo Go first so every run starts fresh on the landing page.
+- stopApp
+- openLink: ${EXPO_URL}
+- extendedWaitUntil:
+    visible: "Get Started"
+    timeout: 30000
+- tapOn: "Get Started"
+
+# Start signed out, so screens show what a new visitor sees.
+- tapOn: "Settings, tab.*"
+- runFlow:
+    when:
+      visible: "Sign Out"
+    commands:
+      - tapOn: "Sign Out"
+
+# Signed out: Feed, item details, Map
+- tapOn: "Feed, tab.*"
+- extendedWaitUntil:
+    visible: "FOUND"
+    timeout: 15000
+- takeScreenshot: 01-feed
+- scrollUntilVisible:
+    element: ".*Slim black card holder.*"
+    centerElement: true  # keep it clear of the tab bar before tapping
+- tapOn: ".*Slim black card holder.*"
+- assertVisible: "Sign in to contact"
+- takeScreenshot: 02-item-details
+- tapOn: "‹ Back"
+- tapOn: "Map, tab.*"
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: 03-map
+
+# Sign in as the demo account
+- tapOn: "Settings, tab.*"
+- tapOn: "you@example.com"
+- inputText: ${EMAIL}
+- hideKeyboard
+- tapOn: "At least 6 characters"
+- inputText: ${PASSWORD}
+- hideKeyboard
+- tapOn:
+    text: "Sign In"
+    index: 1
+# iOS pop-ups that may show up after signing in. They hide the app from
+# Maestro, so handle them before waiting for Settings.
+# "Save Password?" belongs to the iOS password manager, whose buttons Maestro
+# can't read - tap "Not Now" by position (iPhone 17). Without the pop-up this
+# lands on plain text in Settings and does nothing.
+- waitForAnimationToEnd:
+    timeout: 4000
+- tapOn:
+    point: "32%,63%"
+# Notification permission ("optional" moves on if it doesn't appear).
+- tapOn:
+    text: "Allow"
+    optional: true
+- extendedWaitUntil:
+    visible: "Message notifications"
+    timeout: 15000
+- takeScreenshot: 07-settings
+
+# Post tab: a sensitive category shows the "Hand it in?" link
+- tapOn: "Post, tab.*"
+- tapOn:
+    text: "Wallet"
+    index: 0
+- assertVisible: "Consider handing it in.*"  # the link's accessibility label
+- takeScreenshot: 04-post
+
+# Chat with the owner of a lost wallet. The flow only reads data: the demo
+# conversation and its messages are set up beforehand.
+- tapOn: "Feed, tab.*"
+- scrollUntilVisible:
+    element: ".*Brown leather.*"
+    centerElement: true  # keep it clear of the tab bar before tapping
+- tapOn: ".*Brown leather.*"
+- tapOn: "I found this · Contact owner"
+- tapOn:
+    text: "I understand"
+    optional: true  # the one-time safety tips
+- extendedWaitUntil:
+    visible: "Stay safe"
+    timeout: 10000
+- takeScreenshot: 05-chat
+- tapOn: "‹ Back"
+- tapOn: "‹ Back"
+
+# Messages list
+- tapOn: "Messages, tab.*"
+- waitForAnimationToEnd
+- takeScreenshot: 06-messages
