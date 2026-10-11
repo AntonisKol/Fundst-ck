@@ -62,12 +62,16 @@ env:
 # iOS pop-ups that may show up after signing in. They hide the app from
 # Maestro, so handle them before waiting for Settings.
 # "Save Password?" belongs to the iOS password manager, whose buttons Maestro
-# can't read - tap "Not Now" by position (NOT_NOW above). iOS asks after every
-# typed sign-in; if it ever doesn't, this tap misses and the run fails below.
-- waitForAnimationToEnd:
-    timeout: 4000
-- tapOn:
-    point: ${NOT_NOW}
+# can't read - tap "Not Now" by position (NOT_NOW above). The pop-up can take a
+# few seconds to appear, so tap a few times; without it, that spot is empty
+# space below the Settings card, so extra taps do nothing.
+- repeat:
+    times: 3
+    commands:
+      - waitForAnimationToEnd:
+          timeout: 3000
+      - tapOn:
+          point: ${NOT_NOW}
 # Notification permission ("optional" moves on if it doesn't appear).
 - tapOn:
     text: "Allow"
