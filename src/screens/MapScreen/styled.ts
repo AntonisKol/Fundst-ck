@@ -2,8 +2,20 @@ import { StyleSheet } from 'react-native';
 import { colors } from '../../constants/theme';
 
 export const styles = StyleSheet.create({
+  page: {
+    flex: 1,
+    backgroundColor: colors.paper,
+  },
   map: {
     flex: 1,
+  },
+  headerOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    // colors.paper at 90% opacity
+    backgroundColor: 'rgba(192, 192, 192, 0.9)',
   },
   clusterBadge: {
     width: 34,
@@ -23,7 +35,6 @@ export const styles = StyleSheet.create({
   modal: {
     flex: 1,
     backgroundColor: colors.paper,
-    paddingTop: 60,
     paddingHorizontal: 20,
   },
   modalTitle: {

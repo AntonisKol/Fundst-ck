@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { View, Text, FlatList, Image, Pressable, ActivityIndicator, RefreshControl } from "react-native";
 import { useFocusEffect, useNavigation, StackActions } from "@react-navigation/native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { supabase } from "../../supabase/supabase";
 import { useAuth } from "../../context/AuthContext";
 import RequireAuthPrompt from "../../components/RequireAuthPrompt";
+import ScreenHeader from "../../components/ScreenHeader";
+import { Ionicons } from "@expo/vector-icons";
+import { CATEGORY_ICONS } from "../../constants/categories";
 import { fetchConversations, otherPartyLabel, chatTitle, ConversationSummary } from "../../utils/chat";
 import { colors } from "../../constants/theme";
 import { styles } from "./styled";
@@ -21,7 +23,6 @@ const MessagesScreen = () => {
   const { session } = useAuth();
   const userId = session?.user.id;
   const navigation = useNavigation();
-  const insets = useSafeAreaInsets();
 
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);
   const [loading, setLoading] = useState(true);
@@ -54,7 +55,12 @@ const MessagesScreen = () => {
   }, [userId, load]);
 
   if (!session) {
-    return <RequireAuthPrompt message="Sign in to message finders and owners." />;
+    return (
+      <View style={styles.page}>
+        <ScreenHeader title="Messages" />
+        <RequireAuthPrompt message="Sign in to message finders and owners." />
+      </View>
+    );
   }
 
   const renderConversation = ({ item: conv }: { item: ConversationSummary }) => {
@@ -69,8 +75,17 @@ const MessagesScreen = () => {
         style={styles.row}
         onPress={() => navigation.dispatch(StackActions.push("Chat", { conversationId: conv.id, title }))}
       >
-        {conv.item?.image_url ? <Image source={{ uri: conv.item.image_url }} style={styles.image} /> : <View style={styles.image} />}
+        {conv.item?.image_url ? (
+          <Image source={{ uri: conv.item.image_url }} style={styles.image} />
+        ) : (
+          <View style={[styles.image, styles.imagePlaceholder]}>
+            <Ionicons name={CATEGORY_ICONS[conv.item?.category || "Other"] ?? "cube-outline"} size={26} color={colors.inkSoft} />
+          </View>
+        )}
         <View style={styles.body}>
+          <View style={[styles.badge, conv.item_type === "found" ? styles.badgeFound : styles.badgeLost]}>
+            <Text style={styles.badgeText}>{conv.item_type === "found" ? "FOUND" : "LOST"}</Text>
+          </View>
           <Text style={styles.rowTitle} numberOfLines={1}>{conv.item ? title : "Item removed"}</Text>
           <Text style={[styles.preview, unread && styles.previewUnread]} numberOfLines={1}>{preview}</Text>
         </View>
@@ -88,22 +103,20 @@ const MessagesScreen = () => {
 
   return (
     <View style={styles.page}>
+      <ScreenHeader title="Messages" />
       {loading ? (
-        <ActivityIndicator size="large" color={colors.ink} style={{ marginTop: insets.top + 40 }} />
+        <ActivityIndicator size="large" color={colors.ink} style={{ marginTop: 40 }} />
       ) : (
         <FlatList
           data={conversations}
           keyExtractor={(c) => c.id}
           renderItem={renderConversation}
-          contentContainerStyle={[styles.list, { paddingTop: insets.top + 16 }]}
+          contentContainerStyle={styles.list}
           ListHeaderComponent={
-            <>
-              <Text style={styles.title}>Messages</Text>
-              {/* With chats already listed, keep them and flag the failed refresh. */}
-              {loadError && conversations.length > 0 && (
-                <Text style={styles.refreshError}>Couldn't refresh. Pull down to try again.</Text>
-              )}
-            </>
+            // With chats already listed, keep them and flag the failed refresh.
+            loadError && conversations.length > 0 ? (
+              <Text style={styles.refreshError}>Couldn't refresh. Pull down to try again.</Text>
+            ) : null
           }
           ListEmptyComponent={
             loadError ? (

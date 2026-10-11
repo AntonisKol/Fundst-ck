@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { View, Text, Pressable, StyleSheet, Keyboard } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import FoundItemScreen from "../FoundItemScreen/FoundItemScreen";
 import LostItemScreen from "../LostItemScreen/LostItemScreen";
 import RequireAuthPrompt from "../../components/RequireAuthPrompt";
+import ScreenHeader from "../../components/ScreenHeader";
 import { useAuth } from "../../context/AuthContext";
 import { styles } from "./styled";
 
@@ -21,33 +21,41 @@ const FORMS = [
 
 const PostScreen = () => {
   const { session } = useAuth();
-  const insets = useSafeAreaInsets();
   const [type, setType] = useState<PostType>("found");
 
   if (!session) {
-    return <RequireAuthPrompt message="Sign in to post a lost or found item." />;
+    return (
+      <View style={styles.page}>
+        <ScreenHeader title="Post" />
+        <RequireAuthPrompt message="Sign in to post a lost or found item." />
+      </View>
+    );
   }
 
+  const typeSwitch = (
+    <View style={styles.switch}>
+      {OPTIONS.map((option) => {
+        const active = type === option.value;
+        return (
+          <Pressable
+            key={option.value}
+            onPress={() => {
+              // The hidden form stays mounted, so drop focus from its inputs.
+              Keyboard.dismiss();
+              setType(option.value);
+            }}
+            style={[styles.option, active && (option.value === "found" ? styles.optionFound : styles.optionLost)]}
+          >
+            <Text style={[styles.optionText, active && styles.optionTextActive]}>{option.label}</Text>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+
   return (
-    <View style={[styles.page, { paddingTop: insets.top + 8 }]}>
-      <View style={styles.switch}>
-        {OPTIONS.map((option) => {
-          const active = type === option.value;
-          return (
-            <Pressable
-              key={option.value}
-              onPress={() => {
-                // The hidden form stays mounted, so drop focus from its inputs.
-                Keyboard.dismiss();
-                setType(option.value);
-              }}
-              style={[styles.option, active && (option.value === "found" ? styles.optionFound : styles.optionLost)]}
-            >
-              <Text style={[styles.optionText, active && styles.optionTextActive]}>{option.label}</Text>
-            </Pressable>
-          );
-        })}
-      </View>
+    <View style={styles.page}>
+      <ScreenHeader title="Post" right={typeSwitch} />
 
       {/* Both forms stay mounted and laid out, stacked on top of each other,
           so switching neither wipes a half-filled form nor re-lays out a

@@ -11,6 +11,7 @@ import {
   Platform,
   InputAccessoryView,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BERLIN_ZIP_CODES } from "../constants/berlinZipCodes";
 import { colors } from "../constants/theme";
 
@@ -26,6 +27,7 @@ const ZIP_ACCESSORY_ID = "zipCodeSearchDone";
 const ZipCodePicker = ({ value, onChange, placeholder = "Select ZIP code", style }: Props) => {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const insets = useSafeAreaInsets();
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -46,7 +48,7 @@ const ZipCodePicker = ({ value, onChange, placeholder = "Select ZIP code", style
       </Pressable>
 
       <Modal visible={open} animationType="slide" onRequestClose={() => setOpen(false)}>
-        <View style={styles.modal}>
+        <View style={[styles.modal, { paddingTop: insets.top + 16 }]}>
           <Text style={styles.title}>Select ZIP code</Text>
           <TextInput
             style={styles.search}
@@ -103,7 +105,7 @@ export default ZipCodePicker;
 const styles = StyleSheet.create({
   valueText: { fontSize: 15, color: colors.ink },
   placeholderText: { fontSize: 15, color: colors.inkSoft },
-  modal: { flex: 1, backgroundColor: colors.paper, paddingTop: 60, paddingHorizontal: 20 },
+  modal: { flex: 1, backgroundColor: colors.paper, paddingHorizontal: 20 },
   title: { fontSize: 20, fontWeight: "700", marginBottom: 16, color: colors.ink },
   search: {
     backgroundColor: colors.surfaceMuted,

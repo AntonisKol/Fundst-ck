@@ -6,6 +6,8 @@ export const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.paper,
   },
+  list: { paddingHorizontal: 20, paddingBottom: 120 },
+  empty: { textAlign: "center", color: colors.inkSoft, marginTop: 40 },
   categories: {
     marginBottom: 16,
   },

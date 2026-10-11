@@ -2,7 +2,9 @@ import { StyleSheet } from "react-native";
 import { colors } from "../../constants/theme";
 
 export const styles = StyleSheet.create({
-  page: { flexGrow: 1, backgroundColor: colors.paper, alignItems: "center", justifyContent: "center", padding: 20 },
+  screen: { flex: 1, backgroundColor: colors.paper },
+  // Top-aligned under the header, like the Post tab.
+  page: { flexGrow: 1, alignItems: "center", padding: 20, paddingTop: 4 },
   // BlurView on Android doesn't reliably clip to its own borderRadius, so
   // the radius + clipping live on this plain wrapper instead.
   cardWrapper: { width: "100%", borderRadius: 24, overflow: "hidden" },
@@ -18,6 +20,7 @@ export const styles = StyleSheet.create({
   switchModeText: { textAlign: "center", marginTop: 16, color: colors.stamp, fontWeight: "600" },
   profileLabel: { marginTop: 10, fontWeight: "700", fontSize: 14, color: colors.inkSoft },
   profileValue: { fontSize: 16, marginBottom: 4, color: colors.ink },
+  firstSection: { marginTop: 0 },
   sectionTitle: { marginTop: 20, marginBottom: 2, fontSize: 13, fontWeight: "800", letterSpacing: 1, textTransform: "uppercase", color: colors.stamp },
   settingRow: { flexDirection: "row", alignItems: "center", marginTop: 10 },
   settingText: { flex: 1, marginRight: 12 },

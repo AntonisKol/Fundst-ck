@@ -3,9 +3,8 @@ import { colors } from "../../constants/theme";
 
 export const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: colors.paper },
-  list: { padding: 16, paddingBottom: 120 },
-  title: { fontSize: 26, fontWeight: "800", color: colors.ink, marginBottom: 16 },
-  refreshError: { marginTop: -8, marginBottom: 12, color: colors.lost, fontWeight: "600" },
+  list: { paddingHorizontal: 20, paddingBottom: 120 },
+  refreshError: { marginBottom: 12, color: colors.lost, fontWeight: "600" },
   empty: { textAlign: "center", color: colors.inkSoft, marginTop: 40, lineHeight: 22 },
   row: {
     flexDirection: "row",
@@ -18,6 +17,12 @@ export const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   image: { width: 56, height: 56, borderRadius: 12, backgroundColor: colors.surfaceMuted },
+  imagePlaceholder: { alignItems: "center", justifyContent: "center" },
+  // Same badge as the Feed.
+  badge: { alignSelf: "flex-start", paddingHorizontal: 8, paddingVertical: 1, borderRadius: 10, marginBottom: 3 },
+  badgeFound: { backgroundColor: colors.found },
+  badgeLost: { backgroundColor: colors.lost },
+  badgeText: { color: "white", fontSize: 10, fontWeight: "700", letterSpacing: 0.5 },
   body: { flex: 1, marginLeft: 12 },
   rowTitle: { fontSize: 15, fontWeight: "700", color: colors.ink },
   preview: { marginTop: 2, color: colors.inkSoft },

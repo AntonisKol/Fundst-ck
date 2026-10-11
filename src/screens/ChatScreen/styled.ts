@@ -3,18 +3,6 @@ import { colors } from "../../constants/theme";
 
 export const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: colors.paper },
-  topBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  backText: { fontSize: 16, color: colors.stamp, fontWeight: "600" },
-  topBarTitle: { flex: 1, textAlign: "center", fontSize: 16, fontWeight: "700", color: colors.ink, marginHorizontal: 8 },
-  topBarSpacer: { width: 50 },
   list: { paddingHorizontal: 16, paddingVertical: 12 },
   emptyContainer: { flex: 1 },
   empty: { textAlign: "center", color: colors.inkSoft, marginTop: 40, paddingHorizontal: 20 },

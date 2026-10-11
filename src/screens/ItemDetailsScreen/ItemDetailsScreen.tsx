@@ -2,7 +2,12 @@ import { useState } from "react";
 import { Text, Image, ScrollView, View, Alert, Pressable, ActivityIndicator } from "react-native";
 import { useNavigation, useRoute, StackActions } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../../context/AuthContext";
+import TopBar from "../../components/TopBar";
+import { CATEGORY_ICONS } from "../../constants/categories";
+import { BERLIN_ZIP_CODES } from "../../constants/berlinZipCodes";
+import { colors } from "../../constants/theme";
 import { startConversation, otherPartyLabel, chatTitle } from "../../utils/chat";
 import { SAFETY_TIPS } from "../../constants/safety";
 import { styles } from "./styled";
@@ -97,37 +102,42 @@ const ItemDetailsScreen = () => {
     );
   };
 
+  const area = BERLIN_ZIP_CODES.find((z) => z.zip === location)?.area;
+
   return (
-    <ScrollView style={styles.page} contentContainerStyle={styles.container}>
-      <View style={styles.topBar}>
-        <Pressable onPress={() => navigation.goBack()} hitSlop={12}>
-          <Text style={styles.backText}>‹ Back</Text>
-        </Pressable>
-        <Text style={styles.topBarTitle}>Item Details</Text>
-        <View style={styles.topBarSpacer} />
-      </View>
+    <View style={styles.page}>
+      <TopBar title="Item details" />
+      <ScrollView contentContainerStyle={styles.container}>
+        <View style={styles.card}>
+          {image_url ? (
+            <Image source={{ uri: image_url }} style={styles.image} />
+          ) : (
+            <View style={[styles.image, styles.imagePlaceholder]}>
+              <Ionicons name={CATEGORY_ICONS[category || "Other"] ?? "cube-outline"} size={56} color={colors.inkSoft} />
+            </View>
+          )}
 
-      <View style={[styles.badge, isFound ? styles.badgeFound : styles.badgeLost]}>
-        <Text style={styles.badgeText}>{isFound ? "FOUND" : "LOST"}</Text>
-      </View>
+          <View style={[styles.badge, isFound ? styles.badgeFound : styles.badgeLost]}>
+            <Text style={styles.badgeText}>{isFound ? "FOUND" : "LOST"}</Text>
+          </View>
 
-      {image_url && <Image source={{ uri: image_url }} style={styles.image} />}
+          <Text style={styles.label}>Category</Text>
+          <Text style={styles.value}>{category || "Other"}</Text>
 
-      <Text style={styles.label}>Category:</Text>
-      <Text style={styles.text}>{category || "Other"}</Text>
+          <Text style={styles.label}>{isFound ? "Found near" : "Last seen near"}</Text>
+          <Text style={styles.value}>{area ? `${location} · ${area}` : location}</Text>
 
-      <Text style={styles.label}>{isFound ? "Location found:" : "Last seen near:"}</Text>
-      <Text style={styles.text}>{location}</Text>
+          {notes ? (
+            <>
+              <Text style={styles.label}>Notes</Text>
+              <Text style={styles.value}>{notes}</Text>
+            </>
+          ) : null}
+        </View>
 
-      {notes && (
-        <>
-          <Text style={styles.label}>Notes:</Text>
-          <Text style={styles.text}>{notes}</Text>
-        </>
-      )}
-
-      {renderAction()}
-    </ScrollView>
+        {renderAction()}
+      </ScrollView>
+    </View>
   );
 };
 

@@ -52,9 +52,7 @@ const SettingsView = ({ session }: { session: Session }) => {
       <View style={styles.cardWrapper}>
         <BlurView intensity={30} tint="light" style={StyleSheet.absoluteFill} />
         <View style={styles.card}>
-          <Text style={styles.title}>Settings</Text>
-
-          <Text style={styles.sectionTitle}>Account</Text>
+          <Text style={[styles.sectionTitle, styles.firstSection]}>Account</Text>
           <Text style={styles.profileLabel}>Email</Text>
           <Text style={styles.profileValue}>{session.user.email}</Text>
           {zipCode ? (

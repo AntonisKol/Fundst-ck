@@ -11,8 +11,6 @@ export const styles = StyleSheet.create({
   // keyboard open.
   cardWrapper: { flexGrow: 1, width: "100%", borderRadius: 24, overflow: "hidden" },
   card: { flexGrow: 1, padding: 24, backgroundColor: "rgba(255,255,255,0.9)" },
-  title: { fontSize: 26, fontWeight: "800", textAlign: "center", marginBottom: 4, color: colors.ink },
-  subtitle: { textAlign: "center", color: colors.inkSoft, marginBottom: 16 },
   imageBox: { width: "100%", height: 160, backgroundColor: colors.surfaceMuted, borderRadius: 16, alignItems: "center", justifyContent: "center", marginBottom: 20, overflow: "hidden" },
   image: { width: "100%", height: "100%" },
   imageText: { color: colors.inkSoft, fontSize: 16, fontWeight: "600" },

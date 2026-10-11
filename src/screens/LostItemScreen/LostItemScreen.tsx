@@ -152,8 +152,6 @@ const LostItemScreen = () => {
           <View style={styles.cardWrapper}>
           <BlurView intensity={30} tint="light" style={StyleSheet.absoluteFill} />
           <View style={styles.card}>
-            <Text style={styles.title}>Lost Item</Text>
-            <Text style={styles.subtitle}>Report something you lost</Text>
 
             {/* Optional Image */}
             <Pressable style={styles.imageBox} onPress={pickImage}>
