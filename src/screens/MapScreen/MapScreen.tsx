@@ -1,9 +1,11 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { View, ActivityIndicator, Alert, Text, Modal, Pressable, FlatList } from "react-native";
 import MapView, { Marker, Callout } from "react-native-maps";
 import { supabase } from "../../supabase/supabase";
 import { useNavigation, StackActions } from "@react-navigation/native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors } from "../../constants/theme";
+import ScreenHeader from "../../components/ScreenHeader";
 import { styles } from "./styled";
 
 type ItemType = "found" | "lost";
@@ -28,11 +30,16 @@ const formatItems = (data: any[] | null, type: ItemType): Item[] =>
     longitude: item.longitude ? parseFloat(item.longitude) : 13.4050,
   }));
 
+const BERLIN_REGION = { latitude: 52.52, longitude: 13.405, latitudeDelta: 0.15, longitudeDelta: 0.15 };
+
 const MapScreen = () => {
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedGroup, setSelectedGroup] = useState<Item[] | null>(null);
+  const [mapReady, setMapReady] = useState(false);
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
+  const mapRef = useRef<MapView>(null);
 
   const fetchItems = async () => {
     setLoading(true);
@@ -93,18 +100,40 @@ const MapScreen = () => {
     return Array.from(map.values());
   }, [items]);
 
-  if (loading) return <ActivityIndicator size="large" color={colors.ink} style={{ marginTop: 40 }} />;
+  // Zoom to show every pin, leaving room for the floating header.
+  const fitAllPins = useCallback(() => {
+    const coordinates = groupedByZip.map(([first]) => ({ latitude: first.latitude, longitude: first.longitude }));
+    if (!mapRef.current || coordinates.length === 0) return;
+    if (coordinates.length === 1) {
+      mapRef.current.animateToRegion({ ...coordinates[0], latitudeDelta: 0.05, longitudeDelta: 0.05 }, 0);
+      return;
+    }
+    mapRef.current.fitToCoordinates(coordinates, {
+      edgePadding: { top: insets.top + 100, right: 50, bottom: 50, left: 50 },
+      animated: false,
+    });
+  }, [groupedByZip, insets.top]);
+
+  useEffect(() => {
+    if (mapReady) fitAllPins();
+  }, [mapReady, fitAllPins]);
+
+  if (loading) {
+    return (
+      <View style={styles.page}>
+        <ScreenHeader title="Map" />
+        <ActivityIndicator size="large" color={colors.ink} style={{ marginTop: 40 }} />
+      </View>
+    );
+  }
 
   return (
-    <>
+    <View style={styles.page}>
       <MapView
+        ref={mapRef}
         style={styles.map}
-        initialRegion={{
-          latitude: items[0]?.latitude || 52.5200,
-          longitude: items[0]?.longitude || 13.4050,
-          latitudeDelta: 0.1,
-          longitudeDelta: 0.1,
-        }}
+        onMapReady={() => setMapReady(true)}
+        initialRegion={BERLIN_REGION}
       >
         {groupedByZip.map((group) => {
           const first = group[0];
@@ -145,12 +174,17 @@ const MapScreen = () => {
         })}
       </MapView>
 
+      {/* Floating header: keeps the status bar and title off the map tiles. */}
+      <View style={styles.headerOverlay} pointerEvents="box-none">
+        <ScreenHeader title="Map" />
+      </View>
+
       <Modal
         visible={!!selectedGroup}
         animationType="slide"
         onRequestClose={() => setSelectedGroup(null)}
       >
-        <View style={styles.modal}>
+        <View style={[styles.modal, { paddingTop: insets.top + 16 }]}>
           <Text style={styles.modalTitle}>
             ZIP {selectedGroup?.[0]?.location} · {selectedGroup?.length} items
           </Text>
@@ -184,7 +218,7 @@ const MapScreen = () => {
           </Pressable>
         </View>
       </Modal>
-    </>
+    </View>
   );
 };
 
