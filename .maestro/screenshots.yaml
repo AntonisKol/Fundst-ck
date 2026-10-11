@@ -4,12 +4,19 @@ appId: host.exp.Exponent
 name: README screenshots
 env:
   EXPO_URL: exp://127.0.0.1:8082
+  # Position of "Not Now" on the iOS "Save Password?" pop-up; differs per
+  # device. iPhone 17: 32%,63% - iPhone SE (3rd gen): 30%,66%.
+  NOT_NOW: "32%,63%"
 ---
 # Feed items and tabs are matched by their accessibility label, which joins
 # all their texts ("FOUND, Wallet, 10997, ..." / "Feed, tab, 1 of 5").
 # Close Expo Go first so every run starts fresh on the landing page.
 - stopApp
 - openLink: ${EXPO_URL}
+# A fresh simulator asks once: Open in "Expo Go"?
+- tapOn:
+    text: "Open"
+    optional: true
 - extendedWaitUntil:
     visible: "Get Started"
     timeout: 30000
@@ -55,12 +62,12 @@ env:
 # iOS pop-ups that may show up after signing in. They hide the app from
 # Maestro, so handle them before waiting for Settings.
 # "Save Password?" belongs to the iOS password manager, whose buttons Maestro
-# can't read - tap "Not Now" by position (iPhone 17). Without the pop-up this
-# lands on plain text in Settings and does nothing.
+# can't read - tap "Not Now" by position (NOT_NOW above). iOS asks after every
+# typed sign-in; if it ever doesn't, this tap misses and the run fails below.
 - waitForAnimationToEnd:
     timeout: 4000
 - tapOn:
-    point: "32%,63%"
+    point: ${NOT_NOW}
 # Notification permission ("optional" moves on if it doesn't appear).
 - tapOn:
     text: "Allow"
