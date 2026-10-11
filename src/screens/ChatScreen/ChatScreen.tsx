@@ -10,7 +10,7 @@ import {
   Platform,
   Alert,
 } from "react-native";
-import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
+import { useFocusEffect, useRoute } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { supabase } from "../../supabase/supabase";
 import { useAuth } from "../../context/AuthContext";
@@ -18,6 +18,7 @@ import { useUnread } from "../../context/UnreadContext";
 import { fetchMessages, sendMessage, markConversationRead, Message } from "../../utils/chat";
 import { blockedContentReason, CHAT_INPUT_PLACEHOLDER } from "../../constants/safety";
 import SafetyNotice from "../../components/SafetyNotice";
+import TopBar from "../../components/TopBar";
 import { colors } from "../../constants/theme";
 import { styles } from "./styled";
 
@@ -31,7 +32,6 @@ const formatTime = (iso: string) => new Date(iso).toLocaleTimeString([], { hour:
 
 const ChatScreen = () => {
   const { conversationId, title } = useRoute().params as ChatParams;
-  const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const { session } = useAuth();
   const userId = session?.user.id;
@@ -120,13 +120,7 @@ const ChatScreen = () => {
 
   return (
     <KeyboardAvoidingView style={styles.page} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-      <View style={[styles.topBar, { paddingTop: insets.top + 8 }]}>
-        <Pressable onPress={() => navigation.goBack()} hitSlop={12}>
-          <Text style={styles.backText}>‹ Back</Text>
-        </Pressable>
-        <Text style={styles.topBarTitle} numberOfLines={1}>{title ?? "Chat"}</Text>
-        <View style={styles.topBarSpacer} />
-      </View>
+      <TopBar title={title ?? "Chat"} />
 
       {loading ? (
         <ActivityIndicator size="large" color={colors.ink} style={{ marginTop: 40 }} />
