@@ -14,6 +14,7 @@ import { useNavigation, StackActions } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { CATEGORIES as ITEM_CATEGORIES } from "../../constants/categories";
 import { colors } from "../../constants/theme";
+import ScreenHeader from "../../components/ScreenHeader";
 import { styles } from "./styled";
 
 type ItemType = "found" | "lost";
@@ -133,76 +134,75 @@ const FoundItemsFeed = () => {
     );
   };
 
-  if (loading)
-    return (
-      <View style={[styles.page, { justifyContent: "center" }]}>
-        <ActivityIndicator size="large" color={colors.ink} />
-      </View>
-    );
-
   return (
-    <FlatList
-      style={styles.page}
-      data={filteredItems}
-      keyExtractor={(item) => `${item.type}-${item.id}`}
-      renderItem={renderItem}
-      contentContainerStyle={{ padding: 16, paddingTop: 60, paddingBottom: 120 }}
-      ListEmptyComponent={<Text>No items found yet.</Text>}
-      ListHeaderComponent={
-        <>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.categories}
-          >
-            {TYPES.map((t) => (
-              <TouchableOpacity
-                key={t.value}
-                onPress={() => setSelectedType(t.value)}
-                style={[
-                  styles.categoryButton,
-                  selectedType === t.value && styles.categoryButtonActive,
-                ]}
+    <View style={styles.page}>
+      <ScreenHeader title="Feed" />
+      {loading ? (
+        <ActivityIndicator size="large" color={colors.ink} style={{ marginTop: 40 }} />
+      ) : (
+        <FlatList
+          data={filteredItems}
+          keyExtractor={(item) => `${item.type}-${item.id}`}
+          renderItem={renderItem}
+          contentContainerStyle={styles.list}
+          ListEmptyComponent={<Text style={styles.empty}>No items found yet.</Text>}
+          ListHeaderComponent={
+            <>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={styles.categories}
               >
-                <Text
-                  style={[
-                    styles.categoryText,
-                    selectedType === t.value && styles.categoryTextActive,
-                  ]}
-                >
-                  {t.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.categories}
-          >
-            {CATEGORIES.map((category) => (
-              <TouchableOpacity
-                key={category}
-                onPress={() => setSelectedCategory(category)}
-                style={[
-                  styles.categoryButton,
-                  selectedCategory === category && styles.categoryButtonActive,
-                ]}
+                {TYPES.map((t) => (
+                  <TouchableOpacity
+                    key={t.value}
+                    onPress={() => setSelectedType(t.value)}
+                    style={[
+                      styles.categoryButton,
+                      selectedType === t.value && styles.categoryButtonActive,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.categoryText,
+                        selectedType === t.value && styles.categoryTextActive,
+                      ]}
+                    >
+                      {t.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={styles.categories}
               >
-                <Text
-                  style={[
-                    styles.categoryText,
-                    selectedCategory === category && styles.categoryTextActive,
-                  ]}
-                >
-                  {category}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </>
-      }
-    />
+                {CATEGORIES.map((category) => (
+                  <TouchableOpacity
+                    key={category}
+                    onPress={() => setSelectedCategory(category)}
+                    style={[
+                      styles.categoryButton,
+                      selectedCategory === category && styles.categoryButtonActive,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.categoryText,
+                        selectedCategory === category && styles.categoryTextActive,
+                      ]}
+                    >
+                      {category === "All" ? "Any category" : category}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </>
+          }
+        />
+      )}
+    </View>
   );
 };
 
