@@ -74,15 +74,19 @@ const LostItemScreen = () => {
       quality: 0.7,
     });
 
-    if (!result.canceled && result.assets.length > 0) {
-      const uri = result.assets[0].uri;
-      setImageUri(uri);
-      setUploading(true);
-      const url = await uploadImage(uri);
-      setUploading(false);
-      if (url) setUploadedUrl(url);
-      else Alert.alert("Error", "Upload failed");
+    if (result.canceled || result.assets.length === 0) return;
+
+    const uri = result.assets[0].uri;
+    setImageUri(uri);
+    setUploading(true);
+    const url = await uploadImage(uri);
+    setUploading(false);
+
+    if (!url) {
+      Alert.alert("Error", "Upload failed");
+      return;
     }
+    setUploadedUrl(url);
   };
 
   const saveItem = async () => {
