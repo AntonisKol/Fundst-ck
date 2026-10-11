@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { ReactNode, useState } from "react";
 import {
   View,
   Text,
@@ -20,6 +20,7 @@ import { colors } from "../../constants/theme";
 import ZipCodePicker from "../../components/ZipCodePicker";
 import DismissKeyboardOnTap from "../../components/DismissKeyboardOnTap";
 import SettingsView from "./SettingsView";
+import ScreenHeader from "../../components/ScreenHeader";
 import { styles } from "./styled";
 
 const AccountScreen = () => {
@@ -99,13 +100,21 @@ const AccountScreen = () => {
     }
   };
 
+  // Every state of this tab sits under the same header.
+  const withHeader = (content: ReactNode) => (
+    <View style={styles.screen}>
+      <ScreenHeader title="Settings" />
+      {content}
+    </View>
+  );
+
   if (loading) {
-    return <ActivityIndicator size="large" color={colors.ink} style={{ marginTop: 60 }} />;
+    return withHeader(<ActivityIndicator size="large" color={colors.ink} style={{ marginTop: 40 }} />);
   }
 
-  if (session) return <SettingsView session={session} />;
+  if (session) return withHeader(<SettingsView session={session} />);
 
-  return (
+  return withHeader(
     <DismissKeyboardOnTap>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScrollView contentContainerStyle={styles.page}>
