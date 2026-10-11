@@ -130,8 +130,6 @@ const FoundItemScreen = () => {
           <View style={styles.cardWrapper}>
           <BlurView intensity={30} tint="light" style={StyleSheet.absoluteFill} />
           <View style={styles.card}>
-            <Text style={styles.title}>Found Item</Text>
-            <Text style={styles.subtitle}>Post something you found</Text>
 
             <Pressable style={styles.imageBox} onPress={takePhoto}>
               {imageUri ? <Image source={{ uri: imageUri }} style={styles.image} /> : <Text style={styles.imageText}>Tap to take a photo</Text>}

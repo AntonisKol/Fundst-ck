@@ -5,12 +5,11 @@ export const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: colors.paper },
   switch: {
     flexDirection: "row",
-    alignSelf: "center",
     backgroundColor: colors.surfaceMuted,
     borderRadius: 20,
     padding: 4,
   },
-  option: { paddingVertical: 8, paddingHorizontal: 28, borderRadius: 16 },
+  option: { paddingVertical: 7, paddingHorizontal: 18, borderRadius: 16 },
   optionFound: { backgroundColor: colors.found },
   optionLost: { backgroundColor: colors.lost },
   optionText: { color: colors.ink, fontWeight: "600" },
