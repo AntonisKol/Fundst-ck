@@ -59,15 +59,19 @@ const FoundItemScreen = () => {
 
     const result = await ImagePicker.launchCameraAsync({ mediaTypes: ["images"], allowsEditing: true, quality: 0.7 });
 
-    if (!result.canceled && result.assets.length > 0) {
-      const uri = result.assets[0].uri;
-      setImageUri(uri);
-      setUploading(true);
-      const url = await uploadImage(uri);
-      setUploading(false);
-      if (url) setUploadedUrl(url);
-      else Alert.alert("Error", "Upload failed");
+    if (result.canceled || result.assets.length === 0) return;
+
+    const uri = result.assets[0].uri;
+    setImageUri(uri);
+    setUploading(true);
+    const url = await uploadImage(uri);
+    setUploading(false);
+
+    if (!url) {
+      Alert.alert("Error", "Upload failed");
+      return;
     }
+    setUploadedUrl(url);
   };
 
   const saveItem = async () => {
@@ -93,17 +97,19 @@ const FoundItemScreen = () => {
     });
     setUploading(false);
 
-    if (error) Alert.alert("Error", error);
-    else {
-      Alert.alert("Success", "Item saved!");
-      setImageUri(null);
-      setUploadedUrl(null);
-      setCategory("Other");
-      setLocation("");
-      setNotes("");
-      setErrors({});
-      navigation.navigate("Feed");  
+    if (error) {
+      Alert.alert("Error", error);
+      return;
     }
+
+    Alert.alert("Success", "Item saved!");
+    setImageUri(null);
+    setUploadedUrl(null);
+    setCategory("Other");
+    setLocation("");
+    setNotes("");
+    setErrors({});
+    navigation.navigate("Feed");
   };
 
   const renderCategoryChip = (cat: string) => {

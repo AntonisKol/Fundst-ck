@@ -34,8 +34,11 @@ export const UnreadProvider = ({ children }: { children: ReactNode }) => {
       .select("id", { count: "exact", head: true })
       .is("read_at", null)
       .neq("sender_id", userId);
-    if (error) console.error("Supabase unread count error:", error);
-    else setUnreadCount(count ?? 0);
+    if (error) {
+      console.error("Supabase unread count error:", error);
+      return;
+    }
+    setUnreadCount(count ?? 0);
   }, [userId]);
 
   useEffect(() => {
@@ -51,13 +54,15 @@ export const UnreadProvider = ({ children }: { children: ReactNode }) => {
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, ({ new: row }) => {
         const message = row as Message;
         refreshCount();
+        // No banner for my own messages, the chat on screen, or when switched off.
         if (
-          message.sender_id !== userId &&
-          message.conversation_id !== activeConversation.current &&
-          notificationsOnRef.current
+          message.sender_id === userId ||
+          message.conversation_id === activeConversation.current ||
+          !notificationsOnRef.current
         ) {
-          showMessageNotification(message.body, message.conversation_id);
+          return;
         }
+        showMessageNotification(message.body, message.conversation_id);
       })
       // Read receipts arrive as updates.
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "messages" }, () => refreshCount())

@@ -57,10 +57,13 @@ const ChatScreen = () => {
 
   useEffect(() => {
     fetchMessages(conversationId).then(({ data, error }) => {
-      if (data) setMessages(data);
-      else Alert.alert("Error", error);
       setLoading(false);
       markConversationRead(conversationId);
+      if (!data) {
+        Alert.alert("Error", error);
+        return;
+      }
+      setMessages(data);
     });
 
     const channel = supabase
@@ -118,30 +121,38 @@ const ChatScreen = () => {
   // newest message and stays there as messages arrive. It wants newest first.
   const newestFirst = useMemo(() => [...messages].reverse(), [messages]);
 
-  return (
-    <KeyboardAvoidingView style={styles.page} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-      <TopBar title={title ?? "Chat"} />
+  const renderMessages = () => {
+    if (loading) return <ActivityIndicator size="large" color={colors.ink} style={{ marginTop: 40 }} />;
 
-      {loading ? (
-        <ActivityIndicator size="large" color={colors.ink} style={{ marginTop: 40 }} />
-      ) : messages.length === 0 ? (
-        // Rendered outside the inverted list, which would flip it upside down.
+    if (messages.length === 0) {
+      // Rendered outside the inverted list, which would flip it upside down.
+      return (
         <View style={[styles.list, styles.emptyContainer]}>
           <SafetyNotice />
           <Text style={styles.empty}>No messages yet. Say hi!</Text>
         </View>
-      ) : (
-        <FlatList
-          inverted
-          data={newestFirst}
-          keyExtractor={(m) => m.id}
-          renderItem={renderMessage}
-          contentContainerStyle={styles.list}
-          keyboardShouldPersistTaps="handled"
-          // In an inverted list the footer sits above the oldest message.
-          ListFooterComponent={<SafetyNotice />}
-        />
-      )}
+      );
+    }
+
+    return (
+      <FlatList
+        inverted
+        data={newestFirst}
+        keyExtractor={(m) => m.id}
+        renderItem={renderMessage}
+        contentContainerStyle={styles.list}
+        keyboardShouldPersistTaps="handled"
+        // In an inverted list the footer sits above the oldest message.
+        ListFooterComponent={<SafetyNotice />}
+      />
+    );
+  };
+
+  return (
+    <KeyboardAvoidingView style={styles.page} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+      <TopBar title={title ?? "Chat"} />
+
+      {renderMessages()}
 
       <View style={[styles.inputBar, { paddingBottom: insets.bottom + 8 }]}>
         <TextInput

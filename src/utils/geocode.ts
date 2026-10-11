@@ -12,10 +12,8 @@ export const fetchCoordinates = async (zip: string): Promise<Coordinates> => {
       { headers: { "User-Agent": "FundstuckLostAndFoundApp/1.0" } }
     );
     const data = await response.json();
-    if (data.length > 0) {
-      return { latitude: parseFloat(data[0].lat), longitude: parseFloat(data[0].lon) };
-    }
-    return FALLBACK_COORDS;
+    if (data.length === 0) return FALLBACK_COORDS;
+    return { latitude: parseFloat(data[0].lat), longitude: parseFloat(data[0].lon) };
   } catch (error) {
     console.error("Error fetching coordinates:", error);
     return FALLBACK_COORDS;
