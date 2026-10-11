@@ -23,6 +23,7 @@ import { CATEGORIES } from "../../constants/categories";
 import DismissKeyboardOnTap from "../../components/DismissKeyboardOnTap";
 import ZipCodePicker from "../../components/ZipCodePicker";
 import RequireAuthPrompt from "../../components/RequireAuthPrompt";
+import FundbueroLink from "../../components/FundbueroLink";
 import { useAuth } from "../../context/AuthContext";
 
 const LostItemScreen = () => {
@@ -170,7 +171,11 @@ const LostItemScreen = () => {
 
             {/* Category */}
             <View style={styles.formGroup}>
-              <Text style={styles.label}>Category *</Text>
+              <View style={styles.labelRow}>
+                <Text style={[styles.label, styles.labelInRow]}>Category *</Text>
+                {/* Any lost item may already be waiting at a Fundbüro. */}
+                <FundbueroLink variant="lost" />
+              </View>
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}

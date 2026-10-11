@@ -17,6 +17,9 @@ export const styles = StyleSheet.create({
   loadingOverlay: { ...StyleSheet.absoluteFill, backgroundColor: "rgba(0,0,0,0.4)", alignItems: "center", justifyContent: "center" },
   loadingText: { marginTop: 10, color: "white", fontWeight: "600" },
   formGroup: { marginBottom: 12 },
+  // The row owns the label's bottom margin so the link beside it centers.
+  labelRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 6 },
+  labelInRow: { marginBottom: 0 },
   label: { marginBottom: 6, fontWeight: "600", color: colors.ink },
   chipContainer: { flexDirection: "row", marginVertical: 6 },
   chip: { paddingVertical: 6, paddingHorizontal: 14, backgroundColor: colors.surfaceMuted, borderRadius: 20, marginRight: 10 },

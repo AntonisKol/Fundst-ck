@@ -22,7 +22,7 @@ import { CATEGORIES } from "../../constants/categories";
 import DismissKeyboardOnTap from "../../components/DismissKeyboardOnTap";
 import ZipCodePicker from "../../components/ZipCodePicker";
 import RequireAuthPrompt from "../../components/RequireAuthPrompt";
-import HandInNotice from "../../components/HandInNotice";
+import FundbueroLink from "../../components/FundbueroLink";
 import { HAND_IN_CATEGORIES } from "../../constants/safety";
 import { useAuth } from "../../context/AuthContext";
 import { styles } from "./styled";
@@ -144,7 +144,7 @@ const FoundItemScreen = () => {
             <View style={styles.formGroup}>
               <View style={styles.labelRow}>
                 <Text style={[styles.label, styles.labelInRow]}>Category *</Text>
-                {HAND_IN_CATEGORIES.includes(category) && <HandInNotice />}
+                {HAND_IN_CATEGORIES.includes(category) && <FundbueroLink variant="found" />}
               </View>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipContainer}>
                 {CATEGORIES.map(renderCategoryChip)}
