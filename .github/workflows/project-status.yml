@@ -1,11 +1,15 @@
 name: Project status
 
-# Moves issues on the "Fundstück" project board:
+# Moves cards on the "Fundstück" project board:
 #   branch created  -> In progress
 #   PR opened       -> In review
 #   PR merged       -> Done
 # The issue comes from the branch name (e.g. feature/53-fundbuero-tip) and,
 # for PRs, from "Closes #N" in the description.
+# Every PR ends up on the board: a PR with no linked issue gets a card of its own
+# (a PR that links an issue is tracked through that issue's card, so no duplicates).
+# Run it by hand (Actions -> Project status -> Run workflow) with a PR number to
+# put an older PR on the board.
 #
 # Needs a classic personal access token with the "project" scope stored as
 # the PROJECT_TOKEN secret: the default GITHUB_TOKEN can't edit projects
@@ -15,6 +19,11 @@ on:
   create:
   pull_request:
     types: [opened, reopened, ready_for_review, closed]
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: PR number to put on the board
+        required: true
 
 permissions:
   contents: read
@@ -39,7 +48,7 @@ jobs:
           ACTION: ${{ github.event.action }}
           MERGED: ${{ github.event.pull_request.merged }}
           BRANCH: ${{ github.event_name == 'create' && github.event.ref || github.event.pull_request.head.ref }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_NUMBER: ${{ github.event.pull_request.number || inputs.pr }}
           REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
@@ -47,6 +56,16 @@ jobs:
           if [ -z "$GH_TOKEN" ]; then
             echo "::warning::PROJECT_TOKEN secret is not set - skipping."
             exit 0
+          fi
+
+          owner="${REPO%/*}"; name="${REPO#*/}"
+
+          # Run by hand: look the PR up to get its branch and state.
+          if [ "$EVENT" = "workflow_dispatch" ]; then
+            pr=$(gh api "repos/$REPO/pulls/$PR_NUMBER")
+            BRANCH=$(echo "$pr" | jq -r .head.ref)
+            MERGED=$(echo "$pr" | jq -r .merged)
+            ACTION=$(echo "$pr" | jq -r 'if .state == "closed" then "closed" else "opened" end')
           fi
 
           if [ "$EVENT" = "create" ]; then
@@ -58,9 +77,24 @@ jobs:
             status="$IN_REVIEW"; label="In review"
           fi
 
+          # Put a card (issue or PR, given its node id and current project items) on
+          # the board if it isn't there yet, then set its status.
+          set_status() {
+            local content="$1" title="$2" item
+            item=$(echo "$content" | jq -r --arg p "$PROJECT_ID" '.projectItems.nodes[] | select(.project.id == $p) | .id')
+            if [ -z "$item" ]; then
+              item=$(gh api graphql \
+                -f query='mutation($p:ID!,$c:ID!){addProjectV2ItemById(input:{projectId:$p,contentId:$c}){item{id}}}' \
+                -f p="$PROJECT_ID" -f c="$(echo "$content" | jq -r .id)" -q .data.addProjectV2ItemById.item.id)
+            fi
+            gh api graphql \
+              -f query='mutation($p:ID!,$i:ID!,$f:ID!,$o:String!){updateProjectV2ItemFieldValue(input:{projectId:$p,itemId:$i,fieldId:$f,value:{singleSelectOptionId:$o}}){projectV2Item{id}}}' \
+              -f p="$PROJECT_ID" -f i="$item" -f f="$STATUS_FIELD_ID" -f o="$status" > /dev/null
+            echo "$title -> $label"
+          }
+
           # Issue number from the branch name: "<type>/<number>-<slug>".
           issues=$(echo "$BRANCH" | grep -oE '(^|/)[0-9]+-' | grep -oE '[0-9]+' || true)
-          owner="${REPO%/*}"; name="${REPO#*/}"
 
           # Plain GraphQL throughout: the gh issue/pr/project subcommands demand
           # extra token scopes (read:org, read:discussion) this job doesn't need.
@@ -74,24 +108,22 @@ jobs:
           fi
           issues=$(echo $issues | tr ' ' '\n' | grep -E '^[0-9]+$' | sort -u || true)
 
+          # PR with no linked issue: the PR itself goes on the board.
           if [ -z "$issues" ]; then
-            echo "No linked issue for '$BRANCH' - nothing to do."
+            if [ -z "$PR_NUMBER" ]; then
+              echo "No linked issue for '$BRANCH' - nothing to do."
+              exit 0
+            fi
+            pull=$(gh api graphql \
+              -f query='query($o:String!,$r:String!,$n:Int!){repository(owner:$o,name:$r){pullRequest(number:$n){id projectItems(first:20){nodes{id project{id}}}}}}' \
+              -f o="$owner" -f r="$name" -F n="$PR_NUMBER" -q '.data.repository.pullRequest')
+            set_status "$pull" "PR #$PR_NUMBER"
             exit 0
           fi
 
           for n in $issues; do
-            # Find the issue's card on this project, adding it if missing.
             issue=$(gh api graphql \
               -f query='query($o:String!,$r:String!,$n:Int!){repository(owner:$o,name:$r){issue(number:$n){id projectItems(first:20){nodes{id project{id}}}}}}' \
               -f o="$owner" -f r="$name" -F n="$n" -q '.data.repository.issue')
-            item=$(echo "$issue" | jq -r --arg p "$PROJECT_ID" '.projectItems.nodes[] | select(.project.id == $p) | .id')
-            if [ -z "$item" ]; then
-              item=$(gh api graphql \
-                -f query='mutation($p:ID!,$c:ID!){addProjectV2ItemById(input:{projectId:$p,contentId:$c}){item{id}}}' \
-                -f p="$PROJECT_ID" -f c="$(echo "$issue" | jq -r .id)" -q .data.addProjectV2ItemById.item.id)
-            fi
-            gh api graphql \
-              -f query='mutation($p:ID!,$i:ID!,$f:ID!,$o:String!){updateProjectV2ItemFieldValue(input:{projectId:$p,itemId:$i,fieldId:$f,value:{singleSelectOptionId:$o}}){projectV2Item{id}}}' \
-              -f p="$PROJECT_ID" -f i="$item" -f f="$STATUS_FIELD_ID" -f o="$status" > /dev/null
-            echo "#$n -> $label"
+            set_status "$issue" "#$n"
           done
