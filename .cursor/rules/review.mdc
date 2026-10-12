@@ -1,0 +1,10 @@
+---
+description: Use when asked to review code or a pull request. Review against acceptance criteria.
+globs:
+alwaysApply: false
+---
+
+When asked to review, follow the protocol in @REVIEW.md:
+review against the acceptance criteria (Slack thread first, then PR description), report
+each criterion as Met / Not met / Can't verify with evidence, and use the report format there.
+Review only; don't push commits or open PRs unless asked.
