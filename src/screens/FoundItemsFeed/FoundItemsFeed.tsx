@@ -12,36 +12,14 @@ import {
 import { supabase } from "../../supabase/supabase";
 import { useNavigation, StackActions } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { ItemRecord, ItemType } from "../../types/items";
+import { RootStackParamList } from "../../types/navigation";
 import { CATEGORIES as ITEM_CATEGORIES } from "../../constants/categories";
 import { colors } from "../../constants/theme";
 import ScreenHeader from "../../components/ScreenHeader";
 import { styles } from "./styled";
 
-type ItemType = "found" | "lost";
-
-interface FeedItem {
-  id: string;
-  user_id: string | null;
-  image_url: string | null;
-  category: string | null;
-  location: string;
-  notes?: string;
-  created_at: string;
-  type: ItemType;
-}
-
-type RootStackParamList = {
-  ItemDetails: {
-    id: string;
-    user_id: string | null;
-    type: ItemType;
-    image_url: string | null;
-    category: string;
-    location: string;
-    notes?: string;
-    created_at: string;
-  };
-};
+type FeedItem = Omit<ItemRecord, "latitude" | "longitude"> & { type: ItemType };
 
 const CATEGORIES = ["All", ...ITEM_CATEGORIES];
 
@@ -70,8 +48,8 @@ const FoundItemsFeed = () => {
     if (foundRes.error) console.error("Error fetching found items:", foundRes.error);
     if (lostRes.error) console.error("Error fetching lost items:", lostRes.error);
 
-    const found: FeedItem[] = (foundRes.data || []).map((item: any) => ({ ...item, type: "found" }));
-    const lost: FeedItem[] = (lostRes.data || []).map((item: any) => ({ ...item, type: "lost" }));
+    const found: FeedItem[] = (foundRes.data || []).map((item: ItemRecord) => ({ ...item, type: "found" }));
+    const lost: FeedItem[] = (lostRes.data || []).map((item: ItemRecord) => ({ ...item, type: "lost" }));
 
     const merged = [...found, ...lost].sort(
       (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()

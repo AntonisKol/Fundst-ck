@@ -12,6 +12,7 @@ import {
   InputAccessoryView,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { StyleProp, ViewStyle } from "react-native";
 import { BERLIN_ZIP_CODES } from "../constants/berlinZipCodes";
 import { colors } from "../constants/theme";
 
@@ -19,7 +20,7 @@ interface Props {
   value: string;
   onChange: (zip: string) => void;
   placeholder?: string;
-  style?: any;
+  style?: StyleProp<ViewStyle>;
 }
 
 const ZIP_ACCESSORY_ID = "zipCodeSearchDone";

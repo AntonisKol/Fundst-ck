@@ -2,13 +2,15 @@ import { View, Text, Pressable, StyleSheet } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { BlurView } from "expo-blur";
 import { colors } from "../constants/theme";
+import { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
+import { MainTabParamList } from "../types/navigation";
 
 interface Props {
   message: string;
 }
 
 const RequireAuthPrompt = ({ message }: Props) => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<BottomTabNavigationProp<MainTabParamList>>();
 
   return (
     <View style={styles.page}>
@@ -18,7 +20,7 @@ const RequireAuthPrompt = ({ message }: Props) => {
           <Text style={styles.title}>Sign in required</Text>
           <Text style={styles.subtitle}>{message}</Text>
 
-          <Pressable style={styles.button} onPress={() => navigation.navigate("Settings" as never)}>
+          <Pressable style={styles.button} onPress={() => navigation.navigate("Settings")}>
             <Text style={styles.buttonText}>Sign in</Text>
           </Pressable>
         </View>

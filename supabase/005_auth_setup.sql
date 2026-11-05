@@ -9,25 +9,37 @@ alter table public.lost_items add column if not exists user_id uuid references a
 -- supabase/003_lost_items.sql and replace it with an authenticated-only one.
 drop policy if exists "Public can insert lost items" on public.lost_items;
 
+drop policy if exists "Authenticated users can insert own lost items" on public.lost_items;
 create policy "Authenticated users can insert own lost items"
   on public.lost_items for insert
   to authenticated
   with check (auth.uid() = user_id);
 
--- found_items: this table predates this migration and its insert policy
--- name isn't known here. First find it:
---
---   select policyname, cmd, qual, with_check
---   from pg_policies
---   where tablename = 'found_items';
---
--- Then drop whatever the existing permissive INSERT policy is called
--- (something like "Public can insert found items"), e.g.:
---
---   drop policy "<name from the query above>" on public.found_items;
---
--- and run this replacement:
+-- found_items predates this migration and may have an insert policy with a
+-- project-specific name. Remove every INSERT/ALL policy before adding the
+-- authenticated owner-only policy, including when this migration is rerun.
+do $$
+declare
+  policy_name text;
+begin
+  for policy_name in
+    select policyname
+    from pg_policies
+    where schemaname = 'public'
+      and tablename = 'found_items'
+      and cmd in ('INSERT', 'ALL')
+  loop
+    execute format('drop policy %I on public.found_items', policy_name);
+  end loop;
+end $$;
 
+alter table public.found_items enable row level security;
+drop policy if exists "Public can read found items" on public.found_items;
+create policy "Public can read found items"
+  on public.found_items for select
+  using (true);
+
+drop policy if exists "Authenticated users can insert own found items" on public.found_items;
 create policy "Authenticated users can insert own found items"
   on public.found_items for insert
   to authenticated
@@ -35,6 +47,7 @@ create policy "Authenticated users can insert own found items"
 
 -- Storage: restrict photo uploads to signed-in users too (read stays public).
 drop policy if exists "Public can upload item photos" on storage.objects;
+drop policy if exists "Authenticated users can upload item photos" on storage.objects;
 
 create policy "Authenticated users can upload item photos"
   on storage.objects for insert

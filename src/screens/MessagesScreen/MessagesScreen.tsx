@@ -10,6 +10,8 @@ import { CATEGORY_ICONS } from "../../constants/categories";
 import { fetchConversations, otherPartyLabel, chatTitle, ConversationSummary } from "../../utils/chat";
 import { colors } from "../../constants/theme";
 import { styles } from "./styled";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { RootStackParamList } from "../../types/navigation";
 
 const formatWhen = (iso: string) => {
   const date = new Date(iso);
@@ -22,7 +24,7 @@ const formatWhen = (iso: string) => {
 const MessagesScreen = () => {
   const { session } = useAuth();
   const userId = session?.user.id;
-  const navigation = useNavigation();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);
   const [loading, setLoading] = useState(true);
