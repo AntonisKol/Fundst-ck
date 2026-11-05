@@ -2,10 +2,12 @@ import { View, Text, Pressable, StyleSheet } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors } from "../constants/theme";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { RootStackParamList } from "../types/navigation";
 
 // Back button + centered title for screens pushed on top of the tabs.
 const TopBar = ({ title }: { title: string }) => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const insets = useSafeAreaInsets();
   return (
     <View style={[styles.bar, { paddingTop: insets.top + 8 }]}>

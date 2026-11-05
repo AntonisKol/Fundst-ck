@@ -10,7 +10,8 @@ import {
   Platform,
   Alert,
 } from "react-native";
-import { useFocusEffect, useRoute } from "@react-navigation/native";
+import { useFocusEffect } from "@react-navigation/native";
+import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { supabase } from "../../supabase/supabase";
 import { useAuth } from "../../context/AuthContext";
@@ -21,17 +22,12 @@ import SafetyNotice from "../../components/SafetyNotice";
 import TopBar from "../../components/TopBar";
 import { colors } from "../../constants/theme";
 import { styles } from "./styled";
-
-export interface ChatParams {
-  conversationId: string;
-  // Missing when opened from a notification.
-  title?: string;
-}
+import { RootStackParamList } from "../../types/navigation";
 
 const formatTime = (iso: string) => new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
-const ChatScreen = () => {
-  const { conversationId, title } = useRoute().params as ChatParams;
+const ChatScreen = ({ route }: NativeStackScreenProps<RootStackParamList, "Chat">) => {
+  const { conversationId, title } = route.params;
   const insets = useSafeAreaInsets();
   const { session } = useAuth();
   const userId = session?.user.id;

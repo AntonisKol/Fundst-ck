@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Text, Image, ScrollView, View, Alert, Pressable, ActivityIndicator } from "react-native";
-import { useNavigation, useRoute, StackActions } from "@react-navigation/native";
+import { useNavigation, StackActions } from "@react-navigation/native";
+import { NativeStackNavigationProp, NativeStackScreenProps } from "@react-navigation/native-stack";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../../context/AuthContext";
@@ -11,21 +12,7 @@ import { colors } from "../../constants/theme";
 import { startConversation, otherPartyLabel, chatTitle } from "../../utils/chat";
 import { SAFETY_TIPS } from "../../constants/safety";
 import { styles } from "./styled";
-
-export type ItemType = "found" | "lost";
-
-type RootStackParamList = {
-  ItemDetails: {
-    id: string;
-    user_id: string | null;
-    type: ItemType;
-    image_url: string | null;
-    category: string | null;
-    location: string;
-    notes?: string;
-    created_at: string;
-  };
-};
+import { RootStackParamList } from "../../types/navigation";
 
 const SAFETY_TIPS_SEEN_KEY = "safetyTipsSeen";
 
@@ -47,20 +34,18 @@ const acknowledgeSafetyTipsOnce = async () => {
   if (acknowledged) AsyncStorage.setItem(SAFETY_TIPS_SEEN_KEY, "1").catch(() => {});
 };
 
-const ItemDetailsScreen = () => {
-  const route = useRoute();
-  const navigation = useNavigation();
+const ItemDetailsScreen = ({ route }: NativeStackScreenProps<RootStackParamList, "ItemDetails">) => {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { session } = useAuth();
   const [starting, setStarting] = useState(false);
-  const { id, user_id, type, image_url, category, location, notes } =
-    route.params as RootStackParamList["ItemDetails"];
+  const { id, user_id, type, image_url, category, location, notes } = route.params;
 
   const isFound = type === "found";
   const isMine = !!session && session.user.id === user_id;
 
   const contact = async () => {
     if (!session) {
-      navigation.navigate("MainTabs" as never, { screen: "Settings" } as never);
+      navigation.navigate("MainTabs", { screen: "Settings" });
       return;
     }
 

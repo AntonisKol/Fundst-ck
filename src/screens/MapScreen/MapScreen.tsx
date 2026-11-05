@@ -7,28 +7,23 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors } from "../../constants/theme";
 import ScreenHeader from "../../components/ScreenHeader";
 import { styles } from "./styled";
+import { ItemRecord, ItemType } from "../../types/items";
+import { RootStackParamList } from "../../types/navigation";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
-type ItemType = "found" | "lost";
-
-interface Item {
-  id: string;
-  image_url?: string;
-  category: string | null;
-  location: string;
-  notes?: string;
-  created_at: string;
+type Item = Omit<ItemRecord, "latitude" | "longitude"> & {
   type: ItemType;
   latitude: number;
   longitude: number;
-}
+};
 
-const formatItems = (data: any[] | null, type: ItemType): Item[] =>
-  (data || []).map((item) => ({
-    ...item,
-    type,
-    latitude: item.latitude ? parseFloat(item.latitude) : 52.5200, // fallback Berlin
-    longitude: item.longitude ? parseFloat(item.longitude) : 13.4050,
-  }));
+const formatItems = (data: ItemRecord[] | null, type: ItemType): Item[] =>
+  (data || []).flatMap((item) => {
+    if (item.latitude === null || item.longitude === null) return [];
+    if (!Number.isFinite(item.latitude) || !Number.isFinite(item.longitude)) return [];
+
+    return [{ ...item, type, latitude: item.latitude, longitude: item.longitude }];
+  });
 
 const BERLIN_REGION = { latitude: 52.52, longitude: 13.405, latitudeDelta: 0.15, longitudeDelta: 0.15 };
 
@@ -37,7 +32,7 @@ const MapScreen = () => {
   const [loading, setLoading] = useState(true);
   const [selectedGroup, setSelectedGroup] = useState<Item[] | null>(null);
   const [mapReady, setMapReady] = useState(false);
-  const navigation = useNavigation();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const insets = useSafeAreaInsets();
   const mapRef = useRef<MapView>(null);
 
@@ -94,8 +89,9 @@ const MapScreen = () => {
     const map = new Map<string, Item[]>();
     items.forEach((item) => {
       const key = item.location || `${item.latitude},${item.longitude}`;
-      if (!map.has(key)) map.set(key, []);
-      map.get(key)!.push(item);
+      const group = map.get(key);
+      if (group) group.push(item);
+      else map.set(key, [item]);
     });
     return Array.from(map.values());
   }, [items]);

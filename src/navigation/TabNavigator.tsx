@@ -8,8 +8,9 @@ import MessagesScreen from "../screens/MessagesScreen/MessagesScreen";
 import AccountScreen from "../screens/AccountScreen/AccountScreen";
 import { colors } from "../constants/theme";
 import { useUnread } from "../context/UnreadContext";
+import { MainTabParamList } from "../types/navigation";
 
-const Tab = createBottomTabNavigator();
+const Tab = createBottomTabNavigator<MainTabParamList>();
 
 type IconName = ComponentProps<typeof Ionicons>["name"];
 
@@ -27,7 +28,7 @@ const TabNavigator = () => {
 
   return (
     <Tab.Navigator
-      screenOptions={({ route }: { route: { name: string } }) => ({
+      screenOptions={({ route }: { route: { name: keyof MainTabParamList } }) => ({
         headerShown: false,
         tabBarIcon: ({ focused, color, size }: { focused: boolean; color: string; size: number }) => (
           <Ionicons

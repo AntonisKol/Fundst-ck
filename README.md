@@ -84,6 +84,13 @@ npx expo start --clear
 
 Scan the QR code with Expo Go (SDK 57). Use `--clear` whenever `.env` changes - its values are compiled into the bundle.
 
+### 4. Check
+
+```bash
+npm run typecheck
+npm test
+```
+
 ## Regenerating the screenshots
 
 The screenshots above are taken automatically with [Maestro](https://maestro.mobile.dev) on the iOS Simulator (`.maestro/screenshots.yaml`), signed in as a demo account:

@@ -7,13 +7,14 @@ import ItemDetailsScreen from "../screens/ItemDetailsScreen/ItemDetailsScreen";
 import ChatScreen from "../screens/ChatScreen/ChatScreen";
 import { colors } from "../constants/theme";
 import { onNotificationTapped } from "../utils/notifications";
+import { RootStackParamList } from "../types/navigation";
 
-const Stack = createNativeStackNavigator();
+const Stack = createNativeStackNavigator<RootStackParamList>();
 
 // Screens sit on this background, so anything not covered by a screen's own
 // background (e.g. the gap KeyboardAvoidingView leaves as the keyboard
 // hides) shows the app grey instead of the default white.
-const navigationRef = createNavigationContainerRef();
+const navigationRef = createNavigationContainerRef<RootStackParamList>();
 
 const theme = { ...DefaultTheme, colors: { ...DefaultTheme.colors, background: colors.paper } };
 
@@ -24,8 +25,8 @@ const RootNavigator = () => {
       onNotificationTapped((conversationId) => {
         if (!navigationRef.isReady()) return;
         // navigate (not push) finds the root stack that owns Chat from inside a tab.
-        if (conversationId) navigationRef.navigate("Chat" as never, { conversationId } as never);
-        else navigationRef.navigate("MainTabs" as never, { screen: "Messages" } as never);
+        if (conversationId) navigationRef.navigate("Chat", { conversationId });
+        else navigationRef.navigate("MainTabs", { screen: "Messages" });
       }),
     []
   );
