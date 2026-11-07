@@ -30,7 +30,7 @@ Fundstück is a mobile app for reporting and finding lost and found items in Ber
 - Anyone can browse; posting requires an account
 - Private chat between finder and owner, with safety tips and links/emails blocked
 - Unread badge and in-app message banners, switchable in Settings
-- Mark items as returned (planned)
+- Mark your own posts as returned or delete them; returned posts leave the Feed and Map
 - Notifications for items in your area (planned)
 
 ## Tech Stack
