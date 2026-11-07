@@ -16,7 +16,16 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { supabase } from "../../supabase/supabase";
 import { useAuth } from "../../context/AuthContext";
 import { useUnread } from "../../context/UnreadContext";
-import { fetchConversationPartner, fetchMessages, sendMessage, markConversationRead, Message } from "../../utils/chat";
+import {
+  blockUser,
+  fetchConversationPartner,
+  fetchMessages,
+  hasBlocked,
+  markConversationRead,
+  Message,
+  sendMessage,
+  unblockUser,
+} from "../../utils/chat";
 import { blockedContentReason, CHAT_INPUT_PLACEHOLDER } from "../../constants/safety";
 import SafetyNotice from "../../components/SafetyNotice";
 import TopBar from "../../components/TopBar";
@@ -43,9 +52,52 @@ const ChatScreen = ({ route }: NativeStackScreenProps<RootStackParamList, "Chat"
   const [reporting, setReporting] = useState(false);
   const [reportedMessage, setReportedMessage] = useState<Message | null>(null);
 
+  const [blocked, setBlocked] = useState(false);
+
   useEffect(() => {
     if (userId) fetchConversationPartner(conversationId, userId).then(setPartnerId);
   }, [conversationId, userId]);
+
+  useEffect(() => {
+    if (userId && partnerId) hasBlocked(userId, partnerId).then(setBlocked);
+  }, [userId, partnerId]);
+
+  const block = async () => {
+    if (!userId || !partnerId) return;
+    const error = await blockUser(userId, partnerId);
+    if (error) {
+      Alert.alert("Couldn't block this person", error);
+      return;
+    }
+    setBlocked(true);
+  };
+
+  const unblock = async () => {
+    if (!userId || !partnerId) return;
+    const error = await unblockUser(userId, partnerId);
+    if (error) {
+      Alert.alert("Couldn't unblock this person", error);
+      return;
+    }
+    setBlocked(false);
+  };
+
+  const confirmBlock = () =>
+    Alert.alert(
+      "Block this person?",
+      "Neither of you will be able to send messages in your chats. They won't be told you blocked them.",
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Block", style: "destructive", onPress: block },
+      ]
+    );
+
+  const openMenu = () =>
+    Alert.alert("Chat options", undefined, [
+      { text: "Report", onPress: () => openReport(null) },
+      blocked ? { text: "Unblock", onPress: unblock } : { text: "Block", style: "destructive", onPress: confirmBlock },
+      { text: "Cancel", style: "cancel" },
+    ]);
 
   const openReport = (message: Message | null) => {
     setReportedMessage(message);
@@ -169,8 +221,8 @@ const ChatScreen = ({ route }: NativeStackScreenProps<RootStackParamList, "Chat"
         title={title ?? "Chat"}
         right={
           partnerId ? (
-            <Pressable onPress={() => openReport(null)} hitSlop={12} accessibilityRole="button" accessibilityLabel="Report this person">
-              <Ionicons name="flag-outline" size={20} color={colors.stamp} />
+            <Pressable onPress={openMenu} hitSlop={12} accessibilityRole="button" accessibilityLabel="Chat options">
+              <Ionicons name="ellipsis-horizontal" size={22} color={colors.stamp} />
             </Pressable>
           ) : undefined
         }
@@ -178,20 +230,29 @@ const ChatScreen = ({ route }: NativeStackScreenProps<RootStackParamList, "Chat"
 
       {renderMessages()}
 
-      <View style={[styles.inputBar, { paddingBottom: insets.bottom + 8 }]}>
-        <TextInput
-          style={styles.input}
-          placeholder={CHAT_INPUT_PLACEHOLDER}
-          placeholderTextColor={colors.inkSoft}
-          value={draft}
-          onChangeText={setDraft}
-          multiline
-          maxLength={2000}
-        />
-        <Pressable onPress={send} disabled={!canSend} style={[styles.sendButton, !canSend && styles.sendButtonDisabled]}>
-          {sending ? <ActivityIndicator color="white" /> : <Text style={styles.sendText}>Send</Text>}
-        </Pressable>
-      </View>
+      {blocked ? (
+        <View style={[styles.blockedBar, { paddingBottom: insets.bottom + 12 }]}>
+          <Text style={styles.blockedText}>You blocked this person.</Text>
+          <Pressable onPress={unblock} hitSlop={8} accessibilityRole="button">
+            <Text style={styles.unblockText}>Unblock</Text>
+          </Pressable>
+        </View>
+      ) : (
+        <View style={[styles.inputBar, { paddingBottom: insets.bottom + 8 }]}>
+          <TextInput
+            style={styles.input}
+            placeholder={CHAT_INPUT_PLACEHOLDER}
+            placeholderTextColor={colors.inkSoft}
+            value={draft}
+            onChangeText={setDraft}
+            multiline
+            maxLength={2000}
+          />
+          <Pressable onPress={send} disabled={!canSend} style={[styles.sendButton, !canSend && styles.sendButtonDisabled]}>
+            {sending ? <ActivityIndicator color="white" /> : <Text style={styles.sendText}>Send</Text>}
+          </Pressable>
+        </View>
+      )}
 
       {partnerId && userId ? (
         <ReportSheet

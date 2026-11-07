@@ -67,6 +67,10 @@ export const fetchMessages = (conversationId: string) =>
     return { data: data as Message[], error: null };
   });
 
+// Postgres's code for `raise exception`: our own rules refusing a message (a block,
+// a link, the spam limit). Expected, and the user is shown the reason, so not logged.
+const REFUSED_BY_RULE = "P0001";
+
 export const sendMessage = (conversationId: string, senderId: string, body: string) =>
   run("send message", async () => {
     const { data, error } = await supabase
@@ -75,7 +79,7 @@ export const sendMessage = (conversationId: string, senderId: string, body: stri
       .select()
       .single();
     if (error) {
-      console.error("Supabase send message error:", error);
+      if (error.code !== REFUSED_BY_RULE) console.error("Supabase send message error:", error);
       return { data: null, error: error.message };
     }
     return { data: data as Message, error: null };
@@ -191,5 +195,54 @@ export const fetchConversationPartner = async (conversationId: string, userId: s
   } catch (err) {
     console.error("Supabase fetch conversation error:", err);
     return null;
+  }
+};
+
+// Blocks are private: this only ever sees blocks the user made, never one
+// made against them. Those surface as a refused message instead.
+export const hasBlocked = async (userId: string, otherId: string): Promise<boolean> => {
+  try {
+    const { data, error } = await supabase
+      .from("blocks")
+      .select("blocked_id")
+      .eq("blocker_id", userId)
+      .eq("blocked_id", otherId)
+      .maybeSingle();
+    if (error) {
+      console.error("Supabase fetch block error:", error);
+      return false;
+    }
+    return data !== null;
+  } catch (err) {
+    console.error("Supabase fetch block error:", err);
+    return false;
+  }
+};
+
+// These return an error message to show the user, or null on success.
+export const blockUser = async (userId: string, otherId: string): Promise<string | null> => {
+  try {
+    const { error } = await supabase.from("blocks").insert({ blocker_id: userId, blocked_id: otherId });
+    // Already blocked is what the user wanted anyway.
+    if (!error || error.code === UNIQUE_VIOLATION) return null;
+
+    console.error("Supabase block error:", error);
+    return error.message;
+  } catch (err) {
+    console.error("Supabase block error:", err);
+    return NETWORK_ERROR_MESSAGE;
+  }
+};
+
+export const unblockUser = async (userId: string, otherId: string): Promise<string | null> => {
+  try {
+    const { error } = await supabase.from("blocks").delete().eq("blocker_id", userId).eq("blocked_id", otherId);
+    if (!error) return null;
+
+    console.error("Supabase unblock error:", error);
+    return error.message;
+  } catch (err) {
+    console.error("Supabase unblock error:", err);
+    return NETWORK_ERROR_MESSAGE;
   }
 };

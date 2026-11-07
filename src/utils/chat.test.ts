@@ -2,17 +2,21 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const insert = vi.fn();
 const single = vi.fn();
+const maybeSingle = vi.fn();
+const remove = vi.fn();
+const sent = vi.fn();
 vi.mock("../supabase/supabase", () => ({
   supabase: {
     from: () => ({
-      insert: (row: object) => insert(row),
-      select: () => ({ eq: () => ({ single: () => single() }) }),
+      insert: (row: object) => Object.assign(insert(row) ?? {}, { select: () => ({ single: () => sent() }) }),
+      select: () => ({ eq: () => ({ single: () => single(), eq: () => ({ maybeSingle: () => maybeSingle() }) }) }),
+      delete: () => ({ eq: () => ({ eq: () => remove() }) }),
     }),
   },
 }));
 
 import { NETWORK_ERROR_MESSAGE } from "./items";
-import { fetchConversationPartner, reportUser } from "./chat";
+import { blockUser, fetchConversationPartner, hasBlocked, reportUser, sendMessage, unblockUser } from "./chat";
 
 const report = { reporterId: "me", reportedUserId: "them", messageId: null, reason: "spam" as const, note: "" };
 
@@ -81,5 +85,81 @@ describe("fetchConversationPartner", () => {
     single.mockResolvedValue({ data: null, error: { message: "not found" } });
 
     await expect(fetchConversationPartner("c1", "me")).resolves.toBeNull();
+  });
+});
+
+describe("blocking", () => {
+  beforeEach(() => {
+    insert.mockReset();
+    maybeSingle.mockReset();
+    remove.mockReset();
+    vi.spyOn(console, "error").mockImplementation(() => {});
+  });
+
+  it("blocks as the given user", async () => {
+    insert.mockResolvedValue({ error: null });
+
+    await expect(blockUser("me", "them")).resolves.toBeNull();
+    expect(insert).toHaveBeenCalledWith({ blocker_id: "me", blocked_id: "them" });
+  });
+
+  it("treats an existing block as success", async () => {
+    insert.mockResolvedValue({ error: { code: "23505", message: "duplicate key" } });
+
+    await expect(blockUser("me", "them")).resolves.toBeNull();
+  });
+
+  it("returns other block errors", async () => {
+    insert.mockResolvedValue({ error: { code: "42501", message: "denied" } });
+
+    await expect(blockUser("me", "them")).resolves.toBe("denied");
+  });
+
+  it("unblocks, and reports a failure", async () => {
+    remove.mockResolvedValueOnce({ error: null });
+    await expect(unblockUser("me", "them")).resolves.toBeNull();
+
+    remove.mockRejectedValueOnce(new Error("offline"));
+    await expect(unblockUser("me", "them")).resolves.toBe(NETWORK_ERROR_MESSAGE);
+  });
+
+  it.each([
+    ["a block exists", { blocked_id: "them" }, true],
+    ["no block exists", null, false],
+  ])("hasBlocked when %s", async (_, data, expected) => {
+    maybeSingle.mockResolvedValue({ data, error: null });
+
+    await expect(hasBlocked("me", "them")).resolves.toBe(expected);
+  });
+
+  it("hasBlocked is false when the lookup fails", async () => {
+    maybeSingle.mockResolvedValue({ data: null, error: { message: "boom" } });
+
+    await expect(hasBlocked("me", "them")).resolves.toBe(false);
+  });
+});
+
+describe("sendMessage", () => {
+  beforeEach(() => {
+    insert.mockReset();
+    sent.mockReset();
+  });
+
+  it("returns a rule's refusal without logging it as an error", async () => {
+    const logged = vi.spyOn(console, "error").mockImplementation(() => {});
+    logged.mockClear();
+    sent.mockResolvedValue({ data: null, error: { code: "P0001", message: "You can't message this person." } });
+
+    await expect(sendMessage("c1", "me", "hi")).resolves.toEqual({ data: null, error: "You can't message this person." });
+    expect(logged).not.toHaveBeenCalled();
+  });
+
+  it("still logs an unexpected failure", async () => {
+    const logged = vi.spyOn(console, "error").mockImplementation(() => {});
+    logged.mockClear();
+    sent.mockResolvedValue({ data: null, error: { code: "42501", message: "denied" } });
+
+    await expect(sendMessage("c1", "me", "hi")).resolves.toEqual({ data: null, error: "denied" });
+    expect(logged).toHaveBeenCalledOnce();
   });
 });

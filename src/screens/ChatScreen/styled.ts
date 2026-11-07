@@ -13,6 +13,18 @@ export const styles = StyleSheet.create({
   bubbleTextMine: { color: "white" },
   time: { fontSize: 11, marginTop: 4, color: colors.inkSoft },
   timeMine: { color: colors.stampTint, textAlign: "right" },
+  blockedBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    backgroundColor: colors.surfaceMuted,
+  },
+  blockedText: { color: colors.ink },
+  unblockText: { color: colors.stamp, fontWeight: "700" },
   inputBar: {
     flexDirection: "row",
     alignItems: "flex-end",
