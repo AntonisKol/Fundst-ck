@@ -73,8 +73,9 @@ For a fresh Supabase project, run these in the SQL Editor, in order:
 7. `supabase/007_chat_safety.sql` - without it, only the app enforces the chat rules
 8. `supabase/008_post_status.sql` - open/returned status; posters can edit and delete their own posts
 9. `supabase/009_reports_blocks.sql` - tables for reporting and blocking users
+10. `supabase/010_block_messages.sql` - refuses messages between blocked users
 
-New SQL files continue the numbering. If you save them as queries in the Supabase SQL Editor, use the same names (e.g. "006 chat") so the two stay easy to match. `006_chat.sql` to `009_reports_blocks.sql` are safe to re-run. When a pull request changes one of them, re-run it after merging.
+New SQL files continue the numbering. If you save them as queries in the Supabase SQL Editor, use the same names (e.g. "006 chat") so the two stay easy to match. `006_chat.sql` to `010_block_messages.sql` are safe to re-run. When a pull request changes one of them, re-run it after merging.
 
 Under **Authentication → URL Configuration**, set the Site URL to the confirmation page: `https://antoniskol.github.io/Fundst-ck/confirmed/`.
 
