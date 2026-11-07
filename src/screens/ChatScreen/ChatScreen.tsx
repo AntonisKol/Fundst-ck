@@ -16,10 +16,12 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { supabase } from "../../supabase/supabase";
 import { useAuth } from "../../context/AuthContext";
 import { useUnread } from "../../context/UnreadContext";
-import { fetchMessages, sendMessage, markConversationRead, Message } from "../../utils/chat";
+import { fetchConversationPartner, fetchMessages, sendMessage, markConversationRead, Message } from "../../utils/chat";
 import { blockedContentReason, CHAT_INPUT_PLACEHOLDER } from "../../constants/safety";
 import SafetyNotice from "../../components/SafetyNotice";
 import TopBar from "../../components/TopBar";
+import ReportSheet from "../../components/ReportSheet";
+import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../../constants/theme";
 import { styles } from "./styled";
 import { RootStackParamList } from "../../types/navigation";
@@ -37,6 +39,18 @@ const ChatScreen = ({ route }: NativeStackScreenProps<RootStackParamList, "Chat"
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const { setActiveConversation } = useUnread();
+  const [partnerId, setPartnerId] = useState<string | null>(null);
+  const [reporting, setReporting] = useState(false);
+  const [reportedMessage, setReportedMessage] = useState<Message | null>(null);
+
+  useEffect(() => {
+    if (userId) fetchConversationPartner(conversationId, userId).then(setPartnerId);
+  }, [conversationId, userId]);
+
+  const openReport = (message: Message | null) => {
+    setReportedMessage(message);
+    setReporting(true);
+  };
 
   // No banners for the chat that's already on screen.
   useFocusEffect(
@@ -104,10 +118,15 @@ const ChatScreen = ({ route }: NativeStackScreenProps<RootStackParamList, "Chat"
   const renderMessage = ({ item }: { item: Message }) => {
     const mine = item.sender_id === userId;
     return (
-      <View style={[styles.bubble, mine ? styles.bubbleMine : styles.bubbleTheirs]}>
+      <Pressable
+        style={[styles.bubble, mine ? styles.bubbleMine : styles.bubbleTheirs]}
+        // Long-press someone else's message to report it.
+        onLongPress={mine ? undefined : () => openReport(item)}
+        accessibilityHint={mine ? undefined : "Long press to report this message"}
+      >
         <Text style={[styles.bubbleText, mine && styles.bubbleTextMine]}>{item.body}</Text>
         <Text style={[styles.time, mine && styles.timeMine]}>{formatTime(item.created_at)}</Text>
-      </View>
+      </Pressable>
     );
   };
 
@@ -146,7 +165,16 @@ const ChatScreen = ({ route }: NativeStackScreenProps<RootStackParamList, "Chat"
 
   return (
     <KeyboardAvoidingView style={styles.page} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-      <TopBar title={title ?? "Chat"} />
+      <TopBar
+        title={title ?? "Chat"}
+        right={
+          partnerId ? (
+            <Pressable onPress={() => openReport(null)} hitSlop={12} accessibilityRole="button" accessibilityLabel="Report this person">
+              <Ionicons name="flag-outline" size={20} color={colors.stamp} />
+            </Pressable>
+          ) : undefined
+        }
+      />
 
       {renderMessages()}
 
@@ -164,6 +192,16 @@ const ChatScreen = ({ route }: NativeStackScreenProps<RootStackParamList, "Chat"
           {sending ? <ActivityIndicator color="white" /> : <Text style={styles.sendText}>Send</Text>}
         </Pressable>
       </View>
+
+      {partnerId && userId ? (
+        <ReportSheet
+          visible={reporting}
+          reporterId={userId}
+          reportedUserId={partnerId}
+          message={reportedMessage}
+          onClose={() => setReporting(false)}
+        />
+      ) : null}
     </KeyboardAvoidingView>
   );
 };

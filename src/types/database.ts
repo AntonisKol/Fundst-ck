@@ -42,6 +42,16 @@ type MessageRow = {
   read_at: string | null;
 };
 
+type ReportRow = {
+  id: string;
+  reporter_id: string | null;
+  reported_user_id: string;
+  message_id: string | null;
+  reason: "scam" | "harassment" | "spam" | "other";
+  note: string | null;
+  created_at: string;
+};
+
 export interface Database {
   public: {
     Tables: {
@@ -73,6 +83,8 @@ export interface Database {
           },
         ]
       >;
+      // Reports can't be changed once filed (009_reports_blocks.sql).
+      reports: Table<ReportRow, Omit<ReportRow, "id" | "created_at">, Record<string, never>>;
     };
     Views: Record<string, never>;
     Functions: {
