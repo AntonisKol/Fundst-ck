@@ -71,8 +71,9 @@ For a fresh Supabase project, run these in the SQL Editor, in order:
 5. `supabase/005_auth_setup.sql`
 6. `supabase/006_chat.sql`
 7. `supabase/007_chat_safety.sql` - without it, only the app enforces the chat rules
+8. `supabase/008_post_status.sql` - open/returned status; posters can edit and delete their own posts
 
-New SQL files continue the numbering. If you save them as queries in the Supabase SQL Editor, use the same names (e.g. "006 chat") so the two stay easy to match. `006_chat.sql` and `007_chat_safety.sql` are safe to re-run. When a pull request changes one of them, re-run it after merging.
+New SQL files continue the numbering. If you save them as queries in the Supabase SQL Editor, use the same names (e.g. "006 chat") so the two stay easy to match. `006_chat.sql`, `007_chat_safety.sql` and `008_post_status.sql` are safe to re-run. When a pull request changes one of them, re-run it after merging.
 
 Under **Authentication → URL Configuration**, set the Site URL to the confirmation page: `https://antoniskol.github.io/Fundst-ck/confirmed/`.
 
