@@ -1,3 +1,4 @@
+import { ReactNode } from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -6,7 +7,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../types/navigation";
 
 // Back button + centered title for screens pushed on top of the tabs.
-const TopBar = ({ title }: { title: string }) => {
+const TopBar = ({ title, right }: { title: string; right?: ReactNode }) => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const insets = useSafeAreaInsets();
   return (
@@ -15,7 +16,7 @@ const TopBar = ({ title }: { title: string }) => {
         <Text style={styles.back}>‹ Back</Text>
       </Pressable>
       <Text style={styles.title} numberOfLines={1}>{title}</Text>
-      <View style={styles.spacer} />
+      <View style={styles.side}>{right}</View>
     </View>
   );
 };
@@ -35,5 +36,5 @@ const styles = StyleSheet.create({
   back: { fontSize: 16, color: colors.stamp, fontWeight: "600" },
   title: { flex: 1, textAlign: "center", fontSize: 16, fontWeight: "700", color: colors.ink, marginHorizontal: 8 },
   // Same width as the back button so the title stays centered.
-  spacer: { width: 50 },
+  side: { width: 50, alignItems: "flex-end" },
 });

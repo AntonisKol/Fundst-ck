@@ -126,3 +126,70 @@ export const fetchConversations = (userId: string) =>
     }));
     return { data: conversations, error: null };
   });
+
+export const REPORT_REASONS = [
+  { value: "scam", label: "Scam or fraud" },
+  { value: "harassment", label: "Harassment" },
+  { value: "spam", label: "Spam" },
+  { value: "other", label: "Something else" },
+] as const;
+
+export type ReportReason = (typeof REPORT_REASONS)[number]["value"];
+
+export const REPORT_NOTE_MAX_LENGTH = 1000;
+
+const UNIQUE_VIOLATION = "23505";
+
+// Returns an error message to show the user, or null on success.
+export const reportUser = async ({
+  reporterId,
+  reportedUserId,
+  messageId,
+  reason,
+  note,
+}: {
+  reporterId: string;
+  reportedUserId: string;
+  messageId: string | null;
+  reason: ReportReason;
+  note: string;
+}): Promise<string | null> => {
+  try {
+    const { error } = await supabase.from("reports").insert({
+      reporter_id: reporterId,
+      reported_user_id: reportedUserId,
+      message_id: messageId,
+      reason,
+      note: note.trim() || null,
+    });
+    if (!error) return null;
+    if (error.code === UNIQUE_VIOLATION) {
+      return messageId ? "You've already reported this message." : "You've already reported this person.";
+    }
+
+    console.error("Supabase report error:", error);
+    return error.message;
+  } catch (err) {
+    console.error("Supabase report error:", err);
+    return NETWORK_ERROR_MESSAGE;
+  }
+};
+
+// The other person in a conversation, or null if it can't be loaded.
+export const fetchConversationPartner = async (conversationId: string, userId: string): Promise<string | null> => {
+  try {
+    const { data, error } = await supabase
+      .from("conversations")
+      .select("owner_id, requester_id")
+      .eq("id", conversationId)
+      .single();
+    if (error) {
+      console.error("Supabase fetch conversation error:", error);
+      return null;
+    }
+    return data.owner_id === userId ? data.requester_id : data.owner_id;
+  } catch (err) {
+    console.error("Supabase fetch conversation error:", err);
+    return null;
+  }
+};
