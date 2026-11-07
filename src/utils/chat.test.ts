@@ -5,18 +5,34 @@ const single = vi.fn();
 const maybeSingle = vi.fn();
 const remove = vi.fn();
 const sent = vi.fn();
+const blockRows = vi.fn();
 vi.mock("../supabase/supabase", () => ({
   supabase: {
     from: () => ({
       insert: (row: object) => Object.assign(insert(row) ?? {}, { select: () => ({ single: () => sent() }) }),
-      select: () => ({ eq: () => ({ single: () => single(), eq: () => ({ maybeSingle: () => maybeSingle() }) }) }),
+      select: () => ({
+        eq: () => ({
+          single: () => single(),
+          eq: () => ({ maybeSingle: () => maybeSingle() }),
+          then: (resolve: (value: unknown) => void, reject: (reason: unknown) => void) => blockRows().then(resolve, reject),
+        }),
+      }),
       delete: () => ({ eq: () => ({ eq: () => remove() }) }),
     }),
   },
 }));
 
 import { NETWORK_ERROR_MESSAGE } from "./items";
-import { blockUser, fetchConversationPartner, hasBlocked, reportUser, sendMessage, unblockUser } from "./chat";
+import {
+  applyBlocks,
+  blockUser,
+  fetchBlockedIds,
+  fetchConversationPartner,
+  hasBlocked,
+  reportUser,
+  sendMessage,
+  unblockUser,
+} from "./chat";
 
 const report = { reporterId: "me", reportedUserId: "them", messageId: null, reason: "spam" as const, note: "" };
 
@@ -161,5 +177,41 @@ describe("sendMessage", () => {
 
     await expect(sendMessage("c1", "me", "hi")).resolves.toEqual({ data: null, error: "denied" });
     expect(logged).toHaveBeenCalledOnce();
+  });
+});
+
+describe("hiding blocked chats", () => {
+  beforeEach(() => {
+    blockRows.mockReset();
+    vi.spyOn(console, "error").mockImplementation(() => {});
+  });
+
+  const chat = (owner_id: string, requester_id: string, unreadCount: number) => ({ owner_id, requester_id, unreadCount });
+
+  it("flags a chat whichever side the blocked person is on, and zeroes its unread count", () => {
+    const [asOwner, asRequester] = applyBlocks([chat("me", "them", 3), chat("them", "me", 2)], ["them"], "me");
+
+    expect(asOwner).toMatchObject({ blocked: true, unreadCount: 0 });
+    expect(asRequester).toMatchObject({ blocked: true, unreadCount: 0 });
+  });
+
+  it("leaves other chats alone", () => {
+    const [other] = applyBlocks([chat("me", "someone-else", 3)], ["them"], "me");
+
+    expect(other).toMatchObject({ blocked: false, unreadCount: 3 });
+  });
+
+  it("lists who the user blocked", async () => {
+    blockRows.mockResolvedValue({ data: [{ blocked_id: "them" }], error: null });
+
+    await expect(fetchBlockedIds("me")).resolves.toEqual(["them"]);
+  });
+
+  it("returns nobody when the lookup fails, so the chat list still loads", async () => {
+    blockRows.mockResolvedValue({ data: null, error: { message: "boom" } });
+    await expect(fetchBlockedIds("me")).resolves.toEqual([]);
+
+    blockRows.mockRejectedValue(new Error("offline"));
+    await expect(fetchBlockedIds("me")).resolves.toEqual([]);
   });
 });

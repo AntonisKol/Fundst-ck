@@ -47,7 +47,7 @@ const ChatScreen = ({ route }: NativeStackScreenProps<RootStackParamList, "Chat"
   const [loading, setLoading] = useState(true);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
-  const { setActiveConversation } = useUnread();
+  const { setActiveConversation, refreshUnread } = useUnread();
   const [partnerId, setPartnerId] = useState<string | null>(null);
   const [reporting, setReporting] = useState(false);
   const [reportedMessage, setReportedMessage] = useState<Message | null>(null);
@@ -70,6 +70,7 @@ const ChatScreen = ({ route }: NativeStackScreenProps<RootStackParamList, "Chat"
       return;
     }
     setBlocked(true);
+    refreshUnread();
   };
 
   const unblock = async () => {
@@ -80,6 +81,7 @@ const ChatScreen = ({ route }: NativeStackScreenProps<RootStackParamList, "Chat"
       return;
     }
     setBlocked(false);
+    refreshUnread();
   };
 
   const confirmBlock = () =>

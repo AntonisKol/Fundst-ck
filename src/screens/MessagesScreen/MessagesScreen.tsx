@@ -30,6 +30,7 @@ const MessagesScreen = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [showBlocked, setShowBlocked] = useState(false);
 
   const load = useCallback(async () => {
     if (!userId) return;
@@ -65,10 +66,14 @@ const MessagesScreen = () => {
     );
   }
 
+  const blockedCount = conversations.filter((conversation) => conversation.blocked).length;
+
   const renderConversation = ({ item: conv }: { item: ConversationSummary }) => {
     const title = chatTitle(otherPartyLabel(conv.item_type, conv.owner_id === userId), conv.item?.category ?? null, conv.item?.location);
     const unread = conv.unreadCount > 0;
-    const preview = conv.lastMessage
+    const preview = conv.blocked
+      ? "You blocked this person"
+      : conv.lastMessage
       ? `${conv.lastMessage.sender_id === userId ? "You: " : ""}${conv.lastMessage.body}`
       : "No messages yet";
 
@@ -110,7 +115,7 @@ const MessagesScreen = () => {
         <ActivityIndicator size="large" color={colors.ink} style={{ marginTop: 40 }} />
       ) : (
         <FlatList
-          data={conversations}
+          data={showBlocked ? conversations : conversations.filter((conversation) => !conversation.blocked)}
           keyExtractor={(c) => c.id}
           renderItem={renderConversation}
           contentContainerStyle={styles.list}
@@ -118,6 +123,16 @@ const MessagesScreen = () => {
             // With chats already listed, keep them and flag the failed refresh.
             loadError && conversations.length > 0 ? (
               <Text style={styles.refreshError}>Couldn't refresh. Pull down to try again.</Text>
+            ) : null
+          }
+          // Blocked chats stay reachable: Unblock lives inside the chat.
+          ListFooterComponent={
+            blockedCount > 0 ? (
+              <Pressable style={styles.blockedToggle} onPress={() => setShowBlocked(!showBlocked)} hitSlop={8} accessibilityRole="button">
+                <Text style={styles.blockedToggleText}>
+                  {showBlocked ? "Hide blocked chats" : `Show blocked chats (${blockedCount})`}
+                </Text>
+              </Pressable>
             ) : null
           }
           ListEmptyComponent={

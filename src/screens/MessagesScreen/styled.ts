@@ -4,6 +4,8 @@ import { colors } from "../../constants/theme";
 export const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: colors.paper },
   list: { paddingHorizontal: 20, paddingBottom: 120 },
+  blockedToggle: { paddingVertical: 16, alignItems: "center" },
+  blockedToggleText: { color: colors.stamp, fontWeight: "600" },
   refreshError: { marginBottom: 12, color: colors.lost, fontWeight: "600" },
   empty: { textAlign: "center", color: colors.inkSoft, marginTop: 40, lineHeight: 22 },
   row: {

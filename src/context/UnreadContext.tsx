@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, ReactNode } from "react";
 import { supabase } from "../supabase/supabase";
 import { useAuth } from "./AuthContext";
-import { Message } from "../utils/chat";
+import { fetchBlockedIds, Message } from "../utils/chat";
 import {
   messageNotificationsEnabled,
   requestNotificationPermission,
@@ -12,9 +12,15 @@ interface UnreadContextValue {
   unreadCount: number;
   // The chat on screen right now - its messages don't trigger a banner.
   setActiveConversation: (conversationId: string | null) => void;
+  // Blocking changes the count without any message changing.
+  refreshUnread: () => void;
 }
 
-const UnreadContext = createContext<UnreadContextValue>({ unreadCount: 0, setActiveConversation: () => {} });
+const UnreadContext = createContext<UnreadContextValue>({
+  unreadCount: 0,
+  setActiveConversation: () => {},
+  refreshUnread: () => {},
+});
 
 export const UnreadProvider = ({ children }: { children: ReactNode }) => {
   const { session } = useAuth();
@@ -28,12 +34,15 @@ export const UnreadProvider = ({ children }: { children: ReactNode }) => {
 
   const refreshCount = useCallback(async () => {
     if (!userId) return;
+    const blockedIds = await fetchBlockedIds(userId);
     // RLS limits this to messages in my own conversations.
-    const { count, error } = await supabase
+    let query = supabase
       .from("messages")
       .select("id", { count: "exact", head: true })
       .is("read_at", null)
       .neq("sender_id", userId);
+    if (blockedIds.length > 0) query = query.not("sender_id", "in", `(${blockedIds.join(",")})`);
+    const { count, error } = await query;
     if (error) {
       console.error("Supabase unread count error:", error);
       return;
@@ -83,7 +92,7 @@ export const UnreadProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   return (
-    <UnreadContext.Provider value={{ unreadCount, setActiveConversation }}>{children}</UnreadContext.Provider>
+    <UnreadContext.Provider value={{ unreadCount, setActiveConversation, refreshUnread: refreshCount }}>{children}</UnreadContext.Provider>
   );
 };
 

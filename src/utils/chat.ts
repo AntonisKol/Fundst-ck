@@ -21,6 +21,8 @@ export interface ConversationSummary {
   last_message_at: string;
   lastMessage: Pick<Message, "body" | "sender_id" | "created_at"> | null;
   unreadCount: number;
+  // I blocked the other person, so this chat is hidden unless asked for.
+  blocked: boolean;
   item: { category: string | null; location: string; image_url: string | null } | null;
 }
 
@@ -90,9 +92,39 @@ export const markConversationRead = async (conversationId: string) => {
   if (error) console.error("Supabase mark_conversation_read error:", error);
 };
 
+const otherParticipant = (conversation: { owner_id: string; requester_id: string }, userId: string) =>
+  conversation.owner_id === userId ? conversation.requester_id : conversation.owner_id;
+
+// The people this user blocked. Empty if the lookup fails: showing a blocked
+// chat is better than the whole list failing to load.
+export const fetchBlockedIds = async (userId: string): Promise<string[]> => {
+  try {
+    const { data, error } = await supabase.from("blocks").select("blocked_id").eq("blocker_id", userId);
+    if (error) {
+      console.error("Supabase fetch blocks error:", error);
+      return [];
+    }
+    return data.map((row) => row.blocked_id);
+  } catch (err) {
+    console.error("Supabase fetch blocks error:", err);
+    return [];
+  }
+};
+
+// Flags chats with blocked people; they don't count as unread.
+export const applyBlocks = <T extends { owner_id: string; requester_id: string; unreadCount: number }>(
+  conversations: T[],
+  blockedIds: string[],
+  userId: string
+) =>
+  conversations.map((conversation) => {
+    const blocked = blockedIds.includes(otherParticipant(conversation, userId));
+    return { ...conversation, blocked, unreadCount: blocked ? 0 : conversation.unreadCount };
+  });
+
 export const fetchConversations = (userId: string) =>
   run("fetch conversations", async () => {
-    const [convRes, unreadRes] = await Promise.all([
+    const [convRes, unreadRes, blockedIds] = await Promise.all([
       supabase
         .from("conversations")
         .select("*, messages(body, sender_id, created_at)")
@@ -100,6 +132,7 @@ export const fetchConversations = (userId: string) =>
         .order("created_at", { referencedTable: "messages", ascending: false })
         .limit(1, { referencedTable: "messages" }),
       supabase.from("messages").select("conversation_id").is("read_at", null).neq("sender_id", userId),
+      fetchBlockedIds(userId),
     ]);
     if (convRes.error || unreadRes.error) {
       console.error("Supabase fetch conversations error:", convRes.error || unreadRes.error);
@@ -122,12 +155,16 @@ export const fetchConversations = (userId: string) =>
     const [found, lost] = await Promise.all([fetchItems("found"), fetchItems("lost")]);
     const items = new Map([...found, ...lost].map((item) => [item.id, item]));
 
-    const conversations: ConversationSummary[] = convRes.data.map(({ messages, ...conv }) => ({
-      ...conv,
-      lastMessage: messages?.[0] || null,
-      unreadCount: unread.get(conv.id) || 0,
-      item: items.get(conv.item_id) || null,
-    }));
+    const conversations: ConversationSummary[] = applyBlocks(
+      convRes.data.map(({ messages, ...conv }) => ({
+        ...conv,
+        lastMessage: messages?.[0] || null,
+        unreadCount: unread.get(conv.id) || 0,
+        item: items.get(conv.item_id) || null,
+      })),
+      blockedIds,
+      userId
+    );
     return { data: conversations, error: null };
   });
 
@@ -191,7 +228,7 @@ export const fetchConversationPartner = async (conversationId: string, userId: s
       console.error("Supabase fetch conversation error:", error);
       return null;
     }
-    return data.owner_id === userId ? data.requester_id : data.owner_id;
+    return otherParticipant(data, userId);
   } catch (err) {
     console.error("Supabase fetch conversation error:", err);
     return null;
