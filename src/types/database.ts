@@ -12,7 +12,8 @@ type Table<
   Relationships: Relationships;
 };
 
-type ItemInsert = Omit<ItemRecord, "id" | "created_at"> & {
+// status and returned_at come from column defaults and a trigger (008_post_status.sql).
+type ItemInsert = Omit<ItemRecord, "id" | "created_at" | "status" | "returned_at"> & {
   id?: string;
   created_at?: string;
 };

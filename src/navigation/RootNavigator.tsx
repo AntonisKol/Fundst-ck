@@ -5,6 +5,7 @@ import { NavigationContainer, DefaultTheme, createNavigationContainerRef } from 
 import LandingPage from "../screens/LandingPage/LandingPage";
 import ItemDetailsScreen from "../screens/ItemDetailsScreen/ItemDetailsScreen";
 import ChatScreen from "../screens/ChatScreen/ChatScreen";
+import MyPostsScreen from "../screens/MyPostsScreen/MyPostsScreen";
 import { colors } from "../constants/theme";
 import { onNotificationTapped } from "../utils/notifications";
 import { RootStackParamList } from "../types/navigation";
@@ -37,6 +38,7 @@ const RootNavigator = () => {
       <Stack.Screen name="Landing" component={LandingPage} />
       <Stack.Screen name="MainTabs" component={TabNavigator} />
       <Stack.Screen name="ItemDetails" component={ItemDetailsScreen} />
+      <Stack.Screen name="MyPosts" component={MyPostsScreen} />
       <Stack.Screen name="Chat" component={ChatScreen} />
     </Stack.Navigator>
   </NavigationContainer>

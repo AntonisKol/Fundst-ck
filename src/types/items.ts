@@ -1,4 +1,5 @@
 export type ItemType = "found" | "lost";
+export type ItemStatus = "open" | "returned";
 
 export type ItemRecord = {
   id: string;
@@ -10,8 +11,13 @@ export type ItemRecord = {
   created_at: string;
   latitude: number | null;
   longitude: number | null;
+  status: ItemStatus;
+  returned_at: string | null;
 };
 
-export interface ItemDetailsParams extends Omit<ItemRecord, "latitude" | "longitude"> {
+// A post as shown in lists and on the details screen.
+export interface ListItem extends Omit<ItemRecord, "latitude" | "longitude"> {
   type: ItemType;
 }
+
+export type ItemDetailsParams = ListItem;
