@@ -4,9 +4,11 @@ import {
   Text,
   FlatList,
   ActivityIndicator,
+  Pressable,
   ScrollView,
   TouchableOpacity,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { supabase } from "../../supabase/supabase";
 import { useNavigation, StackActions } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -16,6 +18,7 @@ import { CATEGORIES as ITEM_CATEGORIES } from "../../constants/categories";
 import { colors } from "../../constants/theme";
 import ScreenHeader from "../../components/ScreenHeader";
 import ItemCard from "../../components/ItemCard";
+import { useAuth } from "../../context/AuthContext";
 import { styles } from "./styled";
 
 const CATEGORIES = ["All", ...ITEM_CATEGORIES];
@@ -27,6 +30,7 @@ const TYPES: { label: string; value: "All" | ItemType }[] = [
 ];
 
 const FoundItemsFeed = () => {
+  const { session } = useAuth();
   const [items, setItems] = useState<ListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState("All");
@@ -92,7 +96,17 @@ const FoundItemsFeed = () => {
 
   return (
     <View style={styles.page}>
-      <ScreenHeader title="Feed" />
+      <ScreenHeader
+        title="Feed"
+        right={
+          session ? (
+            <Pressable style={styles.myPostsButton} onPress={() => navigation.navigate("MyPosts")} accessibilityRole="button">
+              <Ionicons name="albums-outline" size={16} color="white" />
+              <Text style={styles.myPostsText}>My posts</Text>
+            </Pressable>
+          ) : undefined
+        }
+      />
       {loading ? (
         <ActivityIndicator size="large" color={colors.ink} style={{ marginTop: 40 }} />
       ) : (

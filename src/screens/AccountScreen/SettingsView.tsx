@@ -54,6 +54,17 @@ const SettingsView = ({ session }: { session: Session }) => {
 
   return (
     <ScrollView contentContainerStyle={styles.page}>
+      <Pressable style={styles.myPostsCard} onPress={() => navigation.navigate("MyPosts")} accessibilityRole="button">
+        <View style={styles.myPostsIcon}>
+          <Ionicons name="albums-outline" size={22} color="white" />
+        </View>
+        <View style={styles.settingText}>
+          <Text style={styles.settingLabel}>My posts</Text>
+          <Text style={styles.settingHint}>See and manage the items you've reported.</Text>
+        </View>
+        <Ionicons name="chevron-forward" size={20} color={colors.inkSoft} />
+      </Pressable>
+
       <View style={styles.cardWrapper}>
         <BlurView intensity={30} tint="light" style={StyleSheet.absoluteFill} />
         <View style={styles.card}>
@@ -66,19 +77,6 @@ const SettingsView = ({ session }: { session: Session }) => {
               <Text style={styles.profileValue}>{zipCode}</Text>
             </>
           ) : null}
-
-          <Text style={styles.sectionTitle}>Posts</Text>
-          <Pressable
-            style={styles.settingRow}
-            onPress={() => navigation.navigate("MyPosts")}
-            accessibilityRole="button"
-          >
-            <View style={styles.settingText}>
-              <Text style={styles.settingLabel}>My posts</Text>
-              <Text style={styles.settingHint}>See the items you've reported.</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color={colors.inkSoft} />
-          </Pressable>
 
           <Text style={styles.sectionTitle}>Notifications</Text>
           <View style={styles.settingRow}>

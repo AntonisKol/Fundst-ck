@@ -18,6 +18,11 @@ type ItemInsert = Omit<ItemRecord, "id" | "created_at" | "status" | "returned_at
   created_at?: string;
 };
 
+// Mirrors the columns 008_post_status.sql lets signed-in users update.
+type ItemUpdate = Partial<
+  Pick<ItemRecord, "status" | "category" | "location" | "notes" | "image_url" | "latitude" | "longitude">
+>;
+
 type ConversationRow = {
   id: string;
   item_id: string;
@@ -40,8 +45,8 @@ type MessageRow = {
 export interface Database {
   public: {
     Tables: {
-      found_items: Table<ItemRecord, ItemInsert>;
-      lost_items: Table<ItemRecord, ItemInsert>;
+      found_items: Table<ItemRecord, ItemInsert, ItemUpdate>;
+      lost_items: Table<ItemRecord, ItemInsert, ItemUpdate>;
       conversations: Table<
         ConversationRow,
         Omit<ConversationRow, "id" | "created_at" | "last_message_at"> & {
