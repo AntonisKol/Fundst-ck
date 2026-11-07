@@ -3,12 +3,33 @@ export interface Coordinates {
   longitude: number;
 }
 
+const searchGermanPostalCode = (zip: string) =>
+  fetch(
+    `https://nominatim.openstreetmap.org/search?postalcode=${encodeURIComponent(zip)}&country=Germany&format=json&limit=1`,
+    { headers: { "User-Agent": "FundstuckLostAndFoundApp/1.0" } }
+  );
+
+// German ZIP codes are five digits from 01001 to 99998, so none start with 00.
+export const isGermanZipFormat = (zip: string) => /^(?!00)\d{5}$/.test(zip);
+
+// Whether OpenStreetMap knows this German ZIP code: null when it couldn't be
+// checked (offline, service down), so callers can decide not to block on that.
+export const germanZipExists = async (zip: string): Promise<boolean | null> => {
+  try {
+    const response = await searchGermanPostalCode(zip);
+    if (!response.ok) return null;
+
+    const results: unknown = await response.json();
+    return Array.isArray(results) ? results.length > 0 : null;
+  } catch (error) {
+    console.error("Error checking ZIP code:", error);
+    return null;
+  }
+};
+
 export const fetchCoordinates = async (zip: string): Promise<Coordinates | null> => {
   try {
-    const response = await fetch(
-      `https://nominatim.openstreetmap.org/search?postalcode=${encodeURIComponent(zip)}&country=Germany&format=json&limit=1`,
-      { headers: { "User-Agent": "FundstuckLostAndFoundApp/1.0" } }
-    );
+    const response = await searchGermanPostalCode(zip);
     if (!response.ok) return null;
 
     const results: unknown = await response.json();

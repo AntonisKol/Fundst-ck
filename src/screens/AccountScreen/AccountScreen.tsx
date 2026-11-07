@@ -17,7 +17,7 @@ import { supabase } from "../../supabase/supabase";
 import { NETWORK_ERROR_MESSAGE } from "../../utils/items";
 import { useAuth } from "../../context/AuthContext";
 import { colors } from "../../constants/theme";
-import ZipCodePicker from "../../components/ZipCodePicker";
+import { germanZipExists, isGermanZipFormat } from "../../utils/geocode";
 import DismissKeyboardOnTap from "../../components/DismissKeyboardOnTap";
 import SettingsView from "./SettingsView";
 import ScreenHeader from "../../components/ScreenHeader";
@@ -68,15 +68,30 @@ const AccountScreen = () => {
       return;
     }
 
+    const zipCode = zip.trim();
+    if (mode === "signUp" && !isGermanZipFormat(zipCode)) {
+      setErrors({ zip: true });
+      Alert.alert("Invalid ZIP code", "Enter a 5-digit German ZIP code, like 10115.");
+      return;
+    }
+
     setSubmitting(true);
     try {
+      // Only a definite "not found" stops sign-up: if the lookup service can't
+      // be reached, the ZIP is just profile info and shouldn't block anyone.
+      if (mode === "signUp" && (await germanZipExists(zipCode)) === false) {
+        setErrors({ zip: true });
+        Alert.alert("ZIP code not found", `We couldn't find ZIP code ${zipCode} in Germany. Check it and try again.`);
+        return;
+      }
+
       const { data, error } =
         mode === "signIn"
           ? await supabase.auth.signInWithPassword({ email: email.trim(), password })
           : await supabase.auth.signUp({
               email: email.trim(),
               password,
-              options: { data: { zip_code: zip } },
+              options: { data: { zip_code: zipCode } },
             });
 
       if (error) {
@@ -155,10 +170,15 @@ const AccountScreen = () => {
             {mode === "signUp" && (
               <View style={styles.formGroup}>
                 <Text style={styles.label}>ZIP Code*</Text>
-                <ZipCodePicker
+                <TextInput
                   style={[styles.input, errors.zip && styles.errorInput]}
+                  placeholder="e.g. 10115"
                   value={zip}
-                  onChange={(z) => { setZip(z); if (errors.zip) setErrors((prev) => ({ ...prev, zip: false })); }}
+                  onChangeText={(text) => { setZip(text); if (errors.zip) setErrors((prev) => ({ ...prev, zip: false })); }}
+                  keyboardType="number-pad"
+                  maxLength={5}
+                  textContentType="postalCode"
+                  autoComplete="postal-code"
                 />
               </View>
             )}
