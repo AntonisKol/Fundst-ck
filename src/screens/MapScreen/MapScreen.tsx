@@ -40,8 +40,8 @@ const MapScreen = () => {
     setLoading(true);
 
     const [foundRes, lostRes] = await Promise.all([
-      supabase.from("found_items").select("*"),
-      supabase.from("lost_items").select("*"),
+      supabase.from("found_items").select("*").eq("status", "open"),
+      supabase.from("lost_items").select("*").eq("status", "open"),
     ]);
 
     if (foundRes.error) {

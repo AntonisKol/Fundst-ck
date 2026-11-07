@@ -42,8 +42,8 @@ const FoundItemsFeed = () => {
     setLoading(true);
 
     const [foundRes, lostRes] = await Promise.all([
-      supabase.from("found_items").select("*").order("created_at", { ascending: false }),
-      supabase.from("lost_items").select("*").order("created_at", { ascending: false }),
+      supabase.from("found_items").select("*").eq("status", "open").order("created_at", { ascending: false }),
+      supabase.from("lost_items").select("*").eq("status", "open").order("created_at", { ascending: false }),
     ]);
 
     if (foundRes.error) console.error("Error fetching found items:", foundRes.error);
