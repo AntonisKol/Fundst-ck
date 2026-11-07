@@ -1,6 +1,6 @@
 import { supabase } from "../supabase/supabase";
 import { fetchCoordinates } from "./geocode";
-import { ItemRecord, ItemType, ListItem } from "../types/items";
+import { ItemRecord, ItemStatus, ItemType, ListItem } from "../types/items";
 
 export const NETWORK_ERROR_MESSAGE = "Couldn't reach the server. Check your connection and try again.";
 
@@ -15,7 +15,7 @@ export interface NewItem {
 // Geocodes the item's ZIP and inserts it. Returns an error message to show
 // the user, or null on success.
 export const insertItem = async (type: ItemType, item: NewItem): Promise<string | null> => {
-  const table = type === "found" ? "found_items" : "lost_items";
+  const table = tableFor(type);
   try {
     const coords = await fetchCoordinates(item.location);
     const { error } = await supabase
@@ -27,6 +27,43 @@ export const insertItem = async (type: ItemType, item: NewItem): Promise<string 
     return error.message;
   } catch (err) {
     console.error(`Supabase ${table} insert error:`, err);
+    return NETWORK_ERROR_MESSAGE;
+  }
+};
+
+const tableFor = (type: ItemType) => (type === "found" ? "found_items" : "lost_items");
+
+// RLS doesn't raise an error for a post the user may not change: the query
+// succeeds and touches no rows. So check that a row really was affected.
+const NOT_CHANGED_MESSAGE = "This post couldn't be changed. It may already have been deleted.";
+
+// These return an error message to show the user, or null on success.
+export const setItemStatus = async (type: ItemType, id: string, status: ItemStatus): Promise<string | null> => {
+  const table = tableFor(type);
+  try {
+    const { data, error } = await supabase.from(table).update({ status }).eq("id", id).select("id");
+    if (error) {
+      console.error(`Supabase ${table} status update error:`, error);
+      return error.message;
+    }
+    return data.length > 0 ? null : NOT_CHANGED_MESSAGE;
+  } catch (err) {
+    console.error(`Supabase ${table} status update error:`, err);
+    return NETWORK_ERROR_MESSAGE;
+  }
+};
+
+export const deleteItem = async (type: ItemType, id: string): Promise<string | null> => {
+  const table = tableFor(type);
+  try {
+    const { data, error } = await supabase.from(table).delete().eq("id", id).select("id");
+    if (error) {
+      console.error(`Supabase ${table} delete error:`, error);
+      return error.message;
+    }
+    return data.length > 0 ? null : NOT_CHANGED_MESSAGE;
+  } catch (err) {
+    console.error(`Supabase ${table} delete error:`, err);
     return NETWORK_ERROR_MESSAGE;
   }
 };
