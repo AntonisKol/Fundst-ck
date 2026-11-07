@@ -31,6 +31,7 @@ Fundstück is a mobile app for reporting and finding lost and found items in Ber
 - Private chat between finder and owner, with safety tips and links/emails blocked
 - Unread badge and in-app message banners, switchable in Settings
 - Mark your own posts as returned or delete them; returned posts leave the Feed and Map
+- Report someone or a specific message from a chat; block someone, so neither of you can message the other
 - Notifications for items in your area (planned)
 
 ## Tech Stack
@@ -93,6 +94,52 @@ Scan the QR code with Expo Go (SDK 57). Use `--clear` whenever `.env` changes - 
 npm run typecheck
 npm test
 ```
+
+## Reviewing reports
+
+Reports stay anonymous in the app, so moderation happens in the Supabase **SQL Editor**, which can read everything. These queries show private emails and messages: use them only to review a report, and never tell someone who reported them.
+
+**Recent reports:**
+
+```sql
+select r.created_at, r.reason, r.note,
+       reporter.email as reporter,
+       reported.email as reported,
+       m.body as quoted_message
+from public.reports r
+join auth.users reported on reported.id = r.reported_user_id
+left join auth.users reporter on reporter.id = r.reporter_id
+left join public.messages m on m.id = r.message_id
+order by r.created_at desc
+limit 50;
+```
+
+**Who gets reported most**, counting different people so one person can't inflate the number:
+
+```sql
+select reported.email, count(distinct r.reporter_id) as reporters, count(*) as reports
+from public.reports r
+join auth.users reported on reported.id = r.reported_user_id
+group by reported.email
+order by reporters desc, reports desc;
+```
+
+**Ban a user.** This stops them signing in and removes their sessions:
+
+```sql
+update auth.users set banned_until = now() + interval '100 years' where email = 'user@example.com';
+delete from auth.sessions where user_id = (select id from auth.users where email = 'user@example.com');
+```
+
+A ban isn't instant: a token they already hold can keep working until it expires, about an hour by default. To also stop their messages straight away, have the people they're contacting block them.
+
+**Lift a ban:**
+
+```sql
+update auth.users set banned_until = null where email = 'user@example.com';
+```
+
+Banning doesn't remove their posts. To remove a post, delete its row from `found_items` or `lost_items` in the Table Editor.
 
 ## Regenerating the screenshots
 
