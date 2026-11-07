@@ -12,5 +12,6 @@ export type RootStackParamList = {
   Landing: undefined;
   MainTabs: { screen?: keyof MainTabParamList } | undefined;
   ItemDetails: ItemDetailsParams;
+  MyPosts: undefined;
   Chat: { conversationId: string; title?: string };
 };

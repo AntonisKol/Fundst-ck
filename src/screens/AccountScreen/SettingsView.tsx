@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { View, Text, Alert, Pressable, ScrollView, StyleSheet, Switch, Linking, AppState } from "react-native";
 import { BlurView } from "expo-blur";
+import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Session } from "@supabase/supabase-js";
 import { supabase } from "../../supabase/supabase";
 import { colors } from "../../constants/theme";
@@ -10,9 +13,11 @@ import {
   notificationPermissionGranted,
   requestNotificationPermission,
 } from "../../utils/notifications";
+import { RootStackParamList } from "../../types/navigation";
 import { styles } from "./styled";
 
 const SettingsView = ({ session }: { session: Session }) => {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const zipCode = session.user.user_metadata?.zip_code;
   const savedEnabled = messageNotificationsEnabled(session);
 
@@ -61,6 +66,19 @@ const SettingsView = ({ session }: { session: Session }) => {
               <Text style={styles.profileValue}>{zipCode}</Text>
             </>
           ) : null}
+
+          <Text style={styles.sectionTitle}>Posts</Text>
+          <Pressable
+            style={styles.settingRow}
+            onPress={() => navigation.navigate("MyPosts")}
+            accessibilityRole="button"
+          >
+            <View style={styles.settingText}>
+              <Text style={styles.settingLabel}>My posts</Text>
+              <Text style={styles.settingHint}>See the items you've reported.</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={colors.inkSoft} />
+          </Pressable>
 
           <Text style={styles.sectionTitle}>Notifications</Text>
           <View style={styles.settingRow}>

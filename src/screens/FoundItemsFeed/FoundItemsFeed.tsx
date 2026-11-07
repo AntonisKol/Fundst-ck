@@ -3,23 +3,20 @@ import {
   View,
   Text,
   FlatList,
-  Image,
   ActivityIndicator,
   ScrollView,
   TouchableOpacity,
-  Pressable,
 } from "react-native";
 import { supabase } from "../../supabase/supabase";
 import { useNavigation, StackActions } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { ItemRecord, ItemType } from "../../types/items";
+import { ItemRecord, ItemType, ListItem } from "../../types/items";
 import { RootStackParamList } from "../../types/navigation";
 import { CATEGORIES as ITEM_CATEGORIES } from "../../constants/categories";
 import { colors } from "../../constants/theme";
 import ScreenHeader from "../../components/ScreenHeader";
+import ItemCard from "../../components/ItemCard";
 import { styles } from "./styled";
-
-type FeedItem = Omit<ItemRecord, "latitude" | "longitude"> & { type: ItemType };
 
 const CATEGORIES = ["All", ...ITEM_CATEGORIES];
 
@@ -30,7 +27,7 @@ const TYPES: { label: string; value: "All" | ItemType }[] = [
 ];
 
 const FoundItemsFeed = () => {
-  const [items, setItems] = useState<FeedItem[]>([]);
+  const [items, setItems] = useState<ListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedType, setSelectedType] = useState<"All" | ItemType>("All");
@@ -48,8 +45,8 @@ const FoundItemsFeed = () => {
     if (foundRes.error) console.error("Error fetching found items:", foundRes.error);
     if (lostRes.error) console.error("Error fetching lost items:", lostRes.error);
 
-    const found: FeedItem[] = (foundRes.data || []).map((item: ItemRecord) => ({ ...item, type: "found" }));
-    const lost: FeedItem[] = (lostRes.data || []).map((item: ItemRecord) => ({ ...item, type: "lost" }));
+    const found: ListItem[] = (foundRes.data || []).map((item: ItemRecord) => ({ ...item, type: "found" }));
+    const lost: ListItem[] = (lostRes.data || []).map((item: ItemRecord) => ({ ...item, type: "lost" }));
 
     const merged = [...found, ...lost].sort(
       (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
@@ -82,35 +79,16 @@ const FoundItemsFeed = () => {
     });
   }, [items, selectedCategory, selectedType]);
 
-  const renderItem = ({ item }: { item: FeedItem }) => {
-    const realCategory = item.category?.trim() || "Other";
-
-    return (
-      <Pressable
-        style={styles.item}
-        onPress={() => navigation.dispatch(StackActions.push("ItemDetails", {
-          id: item.id,
-          user_id: item.user_id,
-          type: item.type,
-          image_url: item.image_url,
-          category: realCategory,
-          location: item.location,
-          notes: item.notes,
-          created_at: item.created_at,
-        }))}
-      >
-        {item.image_url && <Image source={{ uri: item.image_url }} style={styles.image} />}
-        <View style={{ flex: 1, marginLeft: 12 }}>
-          <View style={[styles.badge, item.type === "found" ? styles.badgeFound : styles.badgeLost]}>
-            <Text style={styles.badgeText}>{item.type === "found" ? "FOUND" : "LOST"}</Text>
-          </View>
-          <Text style={styles.category}>{realCategory}</Text>
-          <Text style={styles.location}>{item.location}</Text>
-          {item.notes ? <Text style={styles.notes}>{item.notes}</Text> : null}
-        </View>
-      </Pressable>
-    );
-  };
+  const renderItem = ({ item }: { item: ListItem }) => (
+    <ItemCard
+      item={item}
+      onPress={() =>
+        navigation.dispatch(
+          StackActions.push("ItemDetails", { ...item, category: item.category?.trim() || "Other" })
+        )
+      }
+    />
+  );
 
   return (
     <View style={styles.page}>
