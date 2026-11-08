@@ -32,6 +32,14 @@
       ],
       "expo-notifications",
       "expo-font",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Fundstück uses your location to show lost and found items near you.",
+          "locationAlwaysAndWhenInUsePermission": false,
+          "isIosBackgroundLocationEnabled": false
+        }
+      ],
       "./plugins/withIosSceneLifecycle"
     ]
   }
