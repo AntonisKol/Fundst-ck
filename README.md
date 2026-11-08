@@ -125,20 +125,10 @@ npm run typecheck
 npm test
 ```
 
-All npm scripts:
+`npm test` runs both test suites; each also runs on its own:
 
-| Script | What it does |
-| --- | --- |
-| `npm start` | Starts the Expo dev server (`expo start`) |
-| `npm run android` | Builds and runs the app on Android (`expo run:android`) |
-| `npm run ios` | Builds and runs the app on iOS (`expo run:ios`) |
-| `npm run web` | Starts the dev server for the web |
-| `npm run typecheck` | Type-checks the project with TypeScript, no output files |
-| `npm test` | Runs the unit tests once with Vitest |
-| `npm run lint` | Runs ESLint; any warning fails |
-| `npm run db-checks` | Checks the database rules against Supabase (see step 5) |
-
-CI also runs `npx expo-doctor`, which checks the Expo packages and config.
+- `npm run test:unit` - Vitest unit tests for logic (`src/**/*.test.ts`)
+- `npm run test:ui` - Jest + React Native Testing Library screen tests (`src/**/*.ui.test.tsx`)
 
 ### 5. Check the database rules
 

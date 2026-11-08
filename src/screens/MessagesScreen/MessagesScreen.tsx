@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
-import { View, Text, FlatList, Image, Pressable, ActivityIndicator, RefreshControl } from "react-native";
+import { View, Text, FlatList, Image, Pressable, RefreshControl } from "react-native";
 import { useFocusEffect, useNavigation, StackActions } from "@react-navigation/native";
 import { supabase } from "../../supabase/supabase";
 import { useAuth } from "../../context/AuthContext";
 import RequireAuthPrompt from "../../components/RequireAuthPrompt";
 import ScreenHeader from "../../components/ScreenHeader";
+import Skeleton, { SkeletonBlock, SkeletonLine } from "../../components/Skeleton";
 import { Ionicons } from "@expo/vector-icons";
 import { CATEGORY_ICONS } from "../../constants/categories";
 import { fetchConversations, otherPartyLabel, chatTitle, ConversationSummary } from "../../utils/chat";
@@ -20,6 +21,26 @@ const formatWhen = (iso: string) => {
     ? date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
     : date.toLocaleDateString([], { day: "numeric", month: "short" });
 };
+
+// Placeholder rows for the first load, built from the real row's styles so
+// the list doesn't jump when the conversations replace them.
+const ConversationSkeletonList = () => (
+  <Skeleton style={styles.list}>
+    {Array.from({ length: 6 }, (_, index) => (
+      <View key={index} style={styles.row}>
+        <SkeletonBlock style={styles.image} />
+        <View style={styles.body}>
+          <SkeletonBlock style={styles.badgeSkeleton} />
+          <SkeletonLine width="65%" style={styles.titleSkeleton} />
+          <SkeletonLine width="85%" />
+        </View>
+        <View style={styles.meta}>
+          <SkeletonLine width={36} />
+        </View>
+      </View>
+    ))}
+  </Skeleton>
+);
 
 const MessagesScreen = () => {
   const { session } = useAuth();
@@ -112,7 +133,7 @@ const MessagesScreen = () => {
     <View style={styles.page}>
       <ScreenHeader title="Messages" />
       {loading ? (
-        <ActivityIndicator size="large" color={colors.ink} style={{ marginTop: 40 }} />
+        <ConversationSkeletonList />
       ) : (
         <FlatList
           data={showBlocked ? conversations : conversations.filter((conversation) => !conversation.blocked)}

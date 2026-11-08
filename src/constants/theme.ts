@@ -1,6 +1,6 @@
-// Fundbüro palette: parchment/ink in place of grey/black, patina green and
+// Fundbüro palette: grey paper surfaces with warm ink text, patina green and
 // brick terracotta for found/lost, an ink-stamp blue for selection/accent
-// states, and brass twine gold for ZIP tags and found map pins.
+// states, and brass twine gold for found map pins.
 export const colors = {
   paper: "#c0c0c0ff",
   surface: "#ffffff84",

@@ -20,7 +20,6 @@ export const styles = StyleSheet.create({
   },
   image: { width: 56, height: 56, borderRadius: 12, backgroundColor: colors.surfaceMuted },
   imagePlaceholder: { alignItems: "center", justifyContent: "center" },
-  // Same badge as the Feed.
   badge: { alignSelf: "flex-start", paddingHorizontal: 8, paddingVertical: 1, borderRadius: 10, marginBottom: 3 },
   badgeFound: { backgroundColor: colors.found },
   badgeLost: { backgroundColor: colors.lost },
@@ -42,4 +41,6 @@ export const styles = StyleSheet.create({
     backgroundColor: colors.stamp,
   },
   unreadText: { color: "white", fontSize: 12, fontWeight: "700" },
+  badgeSkeleton: { width: 44, height: 15, borderRadius: 10, marginBottom: 6 },
+  titleSkeleton: { height: 14, marginBottom: 6 },
 });

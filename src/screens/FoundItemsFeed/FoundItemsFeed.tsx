@@ -3,7 +3,6 @@ import {
   View,
   Text,
   FlatList,
-  ActivityIndicator,
   Pressable,
   ScrollView,
   TouchableOpacity,
@@ -15,9 +14,8 @@ import { ItemType, ListItem } from "../../types/items";
 import { useOpenItems } from "../../hooks/useOpenItems";
 import { RootStackParamList } from "../../types/navigation";
 import { CATEGORIES as ITEM_CATEGORIES } from "../../constants/categories";
-import { colors } from "../../constants/theme";
 import ScreenHeader from "../../components/ScreenHeader";
-import ItemCard from "../../components/ItemCard";
+import ItemCard, { ItemCardSkeletonList } from "../../components/ItemCard";
 import { useAuth } from "../../context/AuthContext";
 import { styles } from "./styled";
 
@@ -70,71 +68,71 @@ const FoundItemsFeed = () => {
           ) : undefined
         }
       />
-      {loading ? (
-        <ActivityIndicator size="large" color={colors.ink} style={{ marginTop: 40 }} />
-      ) : (
-        <FlatList
-          data={filteredItems}
-          keyExtractor={(item) => `${item.type}-${item.id}`}
-          renderItem={renderItem}
-          contentContainerStyle={styles.list}
-          ListEmptyComponent={<Text style={styles.empty}>No items found yet.</Text>}
-          ListHeaderComponent={
-            <>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                style={styles.categories}
-              >
-                {TYPES.map((t) => (
-                  <TouchableOpacity
-                    key={t.value}
-                    onPress={() => setSelectedType(t.value)}
+      {/* The list renders from the start so the filters show right away and
+          skeleton cards hold the space until the posts arrive. */}
+      <FlatList
+        data={loading ? [] : filteredItems}
+        keyExtractor={(item) => `${item.type}-${item.id}`}
+        renderItem={renderItem}
+        contentContainerStyle={styles.list}
+        ListEmptyComponent={
+          loading ? <ItemCardSkeletonList /> : <Text style={styles.empty}>No items found yet.</Text>
+        }
+        ListHeaderComponent={
+          <>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.categories}
+            >
+              {TYPES.map((t) => (
+                <TouchableOpacity
+                  key={t.value}
+                  onPress={() => setSelectedType(t.value)}
+                  style={[
+                    styles.categoryButton,
+                    selectedType === t.value && styles.categoryButtonActive,
+                  ]}
+                >
+                  <Text
                     style={[
-                      styles.categoryButton,
-                      selectedType === t.value && styles.categoryButtonActive,
+                      styles.categoryText,
+                      selectedType === t.value && styles.categoryTextActive,
                     ]}
                   >
-                    <Text
-                      style={[
-                        styles.categoryText,
-                        selectedType === t.value && styles.categoryTextActive,
-                      ]}
-                    >
-                      {t.label}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                style={styles.categories}
-              >
-                {CATEGORIES.map((category) => (
-                  <TouchableOpacity
-                    key={category}
-                    onPress={() => setSelectedCategory(category)}
+                    {t.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.categories}
+            >
+              {CATEGORIES.map((category) => (
+                <TouchableOpacity
+                  key={category}
+                  onPress={() => setSelectedCategory(category)}
+                  style={[
+                    styles.categoryButton,
+                    selectedCategory === category && styles.categoryButtonActive,
+                  ]}
+                >
+                  <Text
                     style={[
-                      styles.categoryButton,
-                      selectedCategory === category && styles.categoryButtonActive,
+                      styles.categoryText,
+                      selectedCategory === category && styles.categoryTextActive,
                     ]}
                   >
-                    <Text
-                      style={[
-                        styles.categoryText,
-                        selectedCategory === category && styles.categoryTextActive,
-                      ]}
-                    >
-                      {category === "All" ? "Any category" : category}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-            </>
-          }
-        />
-      )}
+                    {category === "All" ? "Any category" : category}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </>
+        }
+      />
     </View>
   );
 };
