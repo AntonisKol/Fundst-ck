@@ -1,7 +1,7 @@
 -- Run this in the Supabase SQL editor for this project.
 -- Mirrors the found_items table so lost items can be posted, listed, and mapped.
--- If your found_items RLS policies differ from the permissive ones below,
--- match those instead so both tables behave consistently.
+-- The open insert policy below is replaced by a signed-in-only one in
+-- 005_auth_setup.sql.
 
 create table if not exists public.lost_items (
   id uuid primary key default gen_random_uuid(),
