@@ -26,15 +26,44 @@ import { NETWORK_ERROR_MESSAGE } from "./items";
 import {
   applyBlocks,
   blockUser,
+  chatTitle,
   fetchBlockedIds,
   fetchConversationPartner,
   hasBlocked,
+  otherPartyLabel,
   reportUser,
   sendMessage,
   unblockUser,
 } from "./chat";
 
-const report = { reporterId: "me", reportedUserId: "them", messageId: null, reason: "spam" as const, note: "" };
+describe("otherPartyLabel", () => {
+  it.each([
+    ["found", true, "Owner", "I found it, so they're the owner"],
+    ["found", false, "Finder", "they found it, so they're the finder"],
+    ["lost", true, "Finder", "I lost it, so they're the finder"],
+    ["lost", false, "Owner", "they lost it, so they're the owner"],
+  ] as const)("%s item, I'm the poster: %s → %s (%s)", (itemType, iAmPoster, label, _why) => {
+    expect(otherPartyLabel(itemType, iAmPoster)).toBe(label);
+  });
+});
+
+describe("chatTitle", () => {
+  it("joins role, category and location", () => {
+    expect(chatTitle("Owner", "Wallet", "10115")).toBe("Owner · Wallet · 10115");
+  });
+
+  it("leaves out a missing location", () => {
+    expect(chatTitle("Finder", "Keys")).toBe("Finder · Keys");
+    expect(chatTitle("Finder", "Keys", "")).toBe("Finder · Keys");
+  });
+
+  it("falls back to Other without a category", () => {
+    expect(chatTitle("Owner", null, "10115")).toBe("Owner · Other · 10115");
+    expect(chatTitle("Owner", "")).toBe("Owner · Other");
+  });
+});
+
+const report ={ reporterId: "me", reportedUserId: "them", messageId: null, reason: "spam" as const, note: "" };
 
 describe("reportUser", () => {
   beforeEach(() => {
