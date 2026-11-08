@@ -12,7 +12,7 @@ vi.mock("../supabase/supabase", () => ({
   },
 }));
 
-import { deleteItem, fetchMyItems, NETWORK_ERROR_MESSAGE, setItemStatus } from "./items";
+import { deleteItem, fetchMyItems, fetchOpenItems, NETWORK_ERROR_MESSAGE, setItemStatus } from "./items";
 
 const row = (id: string, created_at: string) => ({ id, created_at });
 
@@ -61,6 +61,30 @@ describe("fetchMyItems", () => {
     eq.mockRejectedValue(new Error("offline"));
 
     await expect(fetchMyItems("user-1")).resolves.toEqual({ data: null, error: NETWORK_ERROR_MESSAGE });
+  });
+});
+
+// Shares its merging and error handling with fetchMyItems, tested above.
+describe("fetchOpenItems", () => {
+  beforeEach(() => {
+    eq.mockReset();
+    vi.spyOn(console, "error").mockImplementation(() => {});
+  });
+
+  it("asks both tables for open posts only, merged newest first", async () => {
+    eq.mockImplementation(async (table: string) => ({
+      data: table === "found_items" ? [row("old-found", "2026-01-01T00:00:00Z")] : [row("new-lost", "2026-02-01T00:00:00Z")],
+      error: null,
+    }));
+
+    const { data } = await fetchOpenItems();
+
+    expect(eq).toHaveBeenCalledWith("found_items", "status", "open");
+    expect(eq).toHaveBeenCalledWith("lost_items", "status", "open");
+    expect(data?.map((item) => [item.id, item.type])).toEqual([
+      ["new-lost", "lost"],
+      ["old-found", "found"],
+    ]);
   });
 });
 
