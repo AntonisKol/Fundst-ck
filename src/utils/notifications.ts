@@ -47,11 +47,18 @@ export const requestNotificationPermission = async () => {
 
 const PREVIEW_LENGTH = 100;
 
+// Counts characters, not UTF-16 units, so an emoji is never cut in half.
+export const messagePreview = (body: string) => {
+  const characters = Array.from(body);
+  if (characters.length <= PREVIEW_LENGTH) return body;
+  return `${characters.slice(0, PREVIEW_LENGTH).join("").trimEnd()}…`;
+};
+
 export const showMessageNotification = (body: string, conversationId: string) =>
   Notifications.scheduleNotificationAsync({
     content: {
       title: "New message",
-      body: body.length > PREVIEW_LENGTH ? `${body.slice(0, PREVIEW_LENGTH).trimEnd()}…` : body,
+      body: messagePreview(body),
       data: { conversationId },
     },
     trigger: null,
