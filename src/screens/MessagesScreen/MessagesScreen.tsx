@@ -80,6 +80,7 @@ const MessagesScreen = () => {
     return (
       <Pressable
         style={styles.row}
+        testID="conversation-row" // the screenshot flow (.maestro/) opens the first chat
         onPress={() => navigation.dispatch(StackActions.push("Chat", { conversationId: conv.id, title }))}
       >
         {conv.item?.image_url ? (

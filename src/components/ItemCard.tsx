@@ -15,7 +15,8 @@ const ItemCard = ({ item, onPress, showStatus = false }: Props) => {
   const category = item.category?.trim() || "Other";
 
   return (
-    <Pressable style={styles.card} onPress={onPress}>
+    // testID: the screenshot flow (.maestro/) taps the first card, whatever post it is.
+    <Pressable style={styles.card} onPress={onPress} testID="item-card">
       {item.image_url ? (
         <Image source={{ uri: item.image_url }} style={styles.image} />
       ) : (
