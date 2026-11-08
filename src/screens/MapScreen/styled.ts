@@ -9,6 +9,22 @@ export const styles = StyleSheet.create({
   map: {
     flex: 1,
   },
+  locateButton: {
+    position: 'absolute',
+    right: 16,
+    bottom: 24,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'white',
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 4,
+  },
   headerOverlay: {
     position: 'absolute',
     top: 0,

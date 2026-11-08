@@ -1,11 +1,15 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { View, ActivityIndicator, Alert, Text, Modal, Pressable, FlatList } from "react-native";
+import { View, ActivityIndicator, Alert, Text, Modal, Pressable, FlatList, Linking } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import MapView, { Marker, Callout } from "react-native-maps";
 import { supabase } from "../../supabase/supabase";
 import { useNavigation, StackActions } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors } from "../../constants/theme";
 import ScreenHeader from "../../components/ScreenHeader";
+import { useAuth } from "../../context/AuthContext";
+import { fetchCoordinates } from "../../utils/geocode";
+import { locationIfAllowed, pickStartingPoint, regionAround, requestLocation } from "../../utils/location";
 import { styles } from "./styled";
 import { ItemRecord, ItemType } from "../../types/items";
 import { RootStackParamList } from "../../types/navigation";
@@ -32,12 +36,15 @@ const MapScreen = () => {
   const [loading, setLoading] = useState(true);
   const [selectedGroup, setSelectedGroup] = useState<Item[] | null>(null);
   const [mapReady, setMapReady] = useState(false);
+  const [showUserLocation, setShowUserLocation] = useState(false);
+  const positioned = useRef(false);
+  const { session } = useAuth();
+  const registeredZip: string | undefined = session?.user.user_metadata?.zip_code;
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const insets = useSafeAreaInsets();
   const mapRef = useRef<MapView>(null);
 
   const fetchItems = async () => {
-    setLoading(true);
 
     const [foundRes, lostRes] = await Promise.all([
       supabase.from("found_items").select("*").eq("status", "open"),
@@ -110,9 +117,40 @@ const MapScreen = () => {
     });
   }, [groupedByZip, insets.top]);
 
+  // Position the map once, when it opens - not again on every live update.
   useEffect(() => {
-    if (mapReady) fitAllPins();
-  }, [mapReady, fitAllPins]);
+    if (!mapReady || positioned.current) return;
+    positioned.current = true;
+
+    (async () => {
+      const here = await locationIfAllowed();
+      if (here) setShowUserLocation(true);
+      const point = await pickStartingPoint({ here: async () => here, zip: registeredZip, geocode: fetchCoordinates });
+      if (!point) {
+        fitAllPins();
+        return;
+      }
+      mapRef.current?.animateToRegion(regionAround(point), 0);
+    })();
+  }, [mapReady, fitAllPins, registeredZip]);
+
+  // Asks for location only when the user taps the button, never on its own.
+  const locateMe = async () => {
+    const result = await requestLocation();
+    if (result === "denied") {
+      Alert.alert("Location is off", "Allow location access in Settings to see what's been lost and found near you.", [
+        { text: "Cancel", style: "cancel" },
+        { text: "Open Settings", onPress: () => Linking.openSettings() },
+      ]);
+      return;
+    }
+    if (!result) {
+      Alert.alert("Couldn't find your location", "Please try again in a moment.");
+      return;
+    }
+    setShowUserLocation(true);
+    mapRef.current?.animateToRegion(regionAround(result), 300);
+  };
 
   if (loading) {
     return (
@@ -130,6 +168,7 @@ const MapScreen = () => {
         style={styles.map}
         onMapReady={() => setMapReady(true)}
         initialRegion={BERLIN_REGION}
+        showsUserLocation={showUserLocation}
       >
         {groupedByZip.map((group) => {
           const first = group[0];
@@ -169,6 +208,15 @@ const MapScreen = () => {
           );
         })}
       </MapView>
+
+      <Pressable
+        style={styles.locateButton}
+        onPress={locateMe}
+        accessibilityRole="button"
+        accessibilityLabel="Show my location"
+      >
+        <Ionicons name="locate" size={22} color={colors.stamp} />
+      </Pressable>
 
       {/* Floating header: keeps the status bar and title off the map tiles. */}
       <View style={styles.headerOverlay} pointerEvents="box-none">
