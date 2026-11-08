@@ -42,6 +42,35 @@ Fundstück is a mobile app for reporting and finding lost and found items in Ber
 - **Images:** expo-image-picker, uploaded to Supabase Storage
 - **Email confirmation page:** static page in `docs/`, served by GitHub Pages
 
+## Project Structure
+
+```
+src/
+  App.tsx           app entry: providers and navigation
+  components/       shared UI (item card, item form, report sheet, top bar, ...)
+  constants/        categories, theme, chat safety rules, Berlin ZIP codes
+  context/          React contexts: auth session, unread messages
+  hooks/            shared hooks: item form state, open items loader
+  navigation/       root stack and bottom tab navigator
+  screens/          one folder per screen (Feed, Map, Post, Chat, Account, ...)
+  supabase/         Supabase client
+  types/            database rows, item and navigation types
+  utils/            helpers (chat, geocoding, location, notifications, storage) and their tests
+supabase/           numbered SQL files: tables, row level security, triggers
+scripts/
+  db-checks/        checks the database rules against the real Supabase project
+  screenshots.sh    regenerates the README screenshots
+plugins/            Expo config plugin (iOS scene life cycle)
+types/              type declarations for .env values
+.maestro/           Maestro flow that takes the screenshots
+.github/
+  workflows/        CI, project board automation, on-demand Claude review
+  pull_request_template.md
+docs/               email confirmation page (GitHub Pages) and screenshots
+```
+
+Tests sit next to the code they test (`*.test.ts`) and run with Vitest.
+
 ## Getting Started
 
 ### 1. Install
@@ -96,6 +125,21 @@ npm run typecheck
 npm test
 ```
 
+All npm scripts:
+
+| Script | What it does |
+| --- | --- |
+| `npm start` | Starts the Expo dev server (`expo start`) |
+| `npm run android` | Builds and runs the app on Android (`expo run:android`) |
+| `npm run ios` | Builds and runs the app on iOS (`expo run:ios`) |
+| `npm run web` | Starts the dev server for the web |
+| `npm run typecheck` | Type-checks the project with TypeScript, no output files |
+| `npm test` | Runs the unit tests once with Vitest |
+| `npm run lint` | Runs ESLint; any warning fails |
+| `npm run db-checks` | Checks the database rules against Supabase (see step 5) |
+
+CI also runs `npx expo-doctor`, which checks the Expo packages and config.
+
 ### 5. Check the database rules
 
 Who may edit, report, block or message whom is enforced by Supabase (row level security, grants and triggers), not by the app. Unit tests can't see those rules, so `scripts/db-checks/` tests them against the real database, signed in and signed out, just like the app talks to it:
@@ -118,6 +162,40 @@ npm run db-checks
 - A demo account that has at least one conversation. Its login stays outside the repo, as `DEMO_EMAIL` and `DEMO_PASSWORD`, or in `~/fundstueck-demo.txt` with `EMAIL=` and `PASSWORD=` lines (`DEMO_CREDENTIALS` points to another file).
 
 **What they change:** only the demo account's own data. 008 works on a temporary post that it deletes; 009 and 010 block the demo account's first chat partner and always unblock again. Reports can't be withdrawn, so 009 leaves one report against that partner (note `db-check 009 - safe to delete`), and later runs see it as "already reported". Deleting someone else's post isn't tested, because if that rule were broken the check would really delete it.
+
+## Workflow
+
+Every change starts as a GitHub issue and goes through a pull request. Nobody commits to `main` directly.
+
+**1. Issue.** Each task is an issue on the [Fundstück project board](https://github.com/users/AntonisKol/projects/1), which has the columns Todo → In progress → In review → Done → Released.
+
+**2. Branch.** Name the branch `<type>/<issue>-<slug>`, for example `fix/69-ios-scene-lifecycle`. Types in use: `feature`, `fix`, `chore`, `ci`, `docs`, `test`, `refactor`.
+
+**3. Pull request.** Open a PR against `main`. The description follows [the PR template](.github/pull_request_template.md):
+
+- `Closes #N` to link the issue
+- What & why
+- Acceptance criteria, each one checkable ("met" or "not met")
+- Out of scope
+- How to test
+
+**4. Checks.** [CI](.github/workflows/ci-cd.yml) runs on every PR: `npm ci`, typecheck, `expo-doctor`, lint and tests. It must pass before merging.
+
+**5. Review.** GitHub Copilot reviews each PR automatically. Cursor and Claude review on request, against the acceptance criteria, following [REVIEW.md](REVIEW.md). Comment `@claude review` on the PR to start the [Claude review](.github/workflows/claude-review.yml). The owner reviews last and merges.
+
+**6. Merge.** PRs are squash-merged, so each PR becomes one commit on `main`. The branch is deleted after merging.
+
+**Board automation.** [project-status.yml](.github/workflows/project-status.yml) moves the issue's card for you. It finds the issue from the number in the branch name and from `Closes #N` in the PR.
+
+| Event | Card moves to |
+| --- | --- |
+| Branch pushed | In progress |
+| PR opened | In review |
+| PR merged | Done |
+
+A PR that links no issue gets a card of its own. A PR closed without merging leaves the card where it is. Released is set by hand.
+
+**Rules on `main`:** changes only through a pull request, no force pushes and no deleting the branch. Force pushes are blocked on every branch.
 
 ## Reviewing reports
 
