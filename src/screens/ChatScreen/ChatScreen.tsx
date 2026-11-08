@@ -28,12 +28,22 @@ import {
 } from "../../utils/chat";
 import { blockedContentReason, CHAT_INPUT_PLACEHOLDER } from "../../constants/safety";
 import SafetyNotice from "../../components/SafetyNotice";
+import Skeleton, { SkeletonBlock } from "../../components/Skeleton";
 import TopBar from "../../components/TopBar";
 import ReportSheet from "../../components/ReportSheet";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../../constants/theme";
 import { styles } from "./styled";
 import { RootStackParamList } from "../../types/navigation";
+
+// Alternating bubble shapes for the first load: whose side and how wide.
+const SKELETON_BUBBLES: { mine: boolean; width: `${number}%` }[] = [
+  { mine: false, width: "55%" },
+  { mine: false, width: "40%" },
+  { mine: true, width: "60%" },
+  { mine: false, width: "70%" },
+  { mine: true, width: "45%" },
+];
 
 const formatTime = (iso: string) => new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
@@ -191,7 +201,19 @@ const ChatScreen = ({ route }: NativeStackScreenProps<RootStackParamList, "Chat"
   const newestFirst = useMemo(() => [...messages].reverse(), [messages]);
 
   const renderMessages = () => {
-    if (loading) return <ActivityIndicator size="large" color={colors.ink} style={{ marginTop: 40 }} />;
+    // Bottom-aligned like the inverted list, where the newest messages land.
+    if (loading) {
+      return (
+        <Skeleton style={[styles.list, styles.skeletonContainer]}>
+          {SKELETON_BUBBLES.map((bubble, index) => (
+            <SkeletonBlock
+              key={index}
+              style={[styles.bubbleSkeleton, bubble.mine ? styles.bubbleSkeletonMine : styles.bubbleSkeletonTheirs, { width: bubble.width }]}
+            />
+          ))}
+        </Skeleton>
+      );
+    }
 
     if (messages.length === 0) {
       // Rendered outside the inverted list, which would flip it upside down.

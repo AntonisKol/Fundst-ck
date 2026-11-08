@@ -1,12 +1,11 @@
 import { useCallback, useState } from "react";
-import { View, Text, FlatList, ActivityIndicator, RefreshControl } from "react-native";
+import { View, Text, FlatList, RefreshControl } from "react-native";
 import { useFocusEffect, useNavigation, StackActions } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useAuth } from "../../context/AuthContext";
-import ItemCard from "../../components/ItemCard";
+import ItemCard, { ItemCardSkeletonList } from "../../components/ItemCard";
 import TopBar from "../../components/TopBar";
 import { fetchMyItems } from "../../utils/items";
-import { colors } from "../../constants/theme";
 import { ListItem } from "../../types/items";
 import { RootStackParamList } from "../../types/navigation";
 import { styles } from "./styled";
@@ -33,7 +32,13 @@ const MyPostsScreen = () => {
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
   const renderList = () => {
-    if (loading) return <ActivityIndicator size="large" color={colors.ink} style={{ marginTop: 40 }} />;
+    if (loading) {
+      return (
+        <View style={styles.list}>
+          <ItemCardSkeletonList count={3} />
+        </View>
+      );
+    }
 
     return (
       <FlatList
