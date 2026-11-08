@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -9,10 +9,10 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { supabase } from "../../supabase/supabase";
 import { useNavigation, StackActions } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { ItemRecord, ItemType, ListItem } from "../../types/items";
+import { ItemType, ListItem } from "../../types/items";
+import { useOpenItems } from "../../hooks/useOpenItems";
 import { RootStackParamList } from "../../types/navigation";
 import { CATEGORIES as ITEM_CATEGORIES } from "../../constants/categories";
 import { colors } from "../../constants/theme";
@@ -29,50 +29,13 @@ const TYPES: { label: string; value: "All" | ItemType }[] = [
   { label: "Lost", value: "lost" },
 ];
 
-const fetchOpenItems = async (): Promise<ListItem[]> => {
-  const [foundRes, lostRes] = await Promise.all([
-    supabase.from("found_items").select("*").eq("status", "open").order("created_at", { ascending: false }),
-    supabase.from("lost_items").select("*").eq("status", "open").order("created_at", { ascending: false }),
-  ]);
-
-  if (foundRes.error) console.error("Error fetching found items:", foundRes.error);
-  if (lostRes.error) console.error("Error fetching lost items:", lostRes.error);
-
-  const found: ListItem[] = (foundRes.data || []).map((item: ItemRecord) => ({ ...item, type: "found" }));
-  const lost: ListItem[] = (lostRes.data || []).map((item: ItemRecord) => ({ ...item, type: "lost" }));
-
-  return [...found, ...lost].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-};
-
 const FoundItemsFeed = () => {
   const { session } = useAuth();
-  const [items, setItems] = useState<ListItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { items, loading } = useOpenItems("items_changes");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedType, setSelectedType] = useState<"All" | ItemType>("All");
 
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-
-  useEffect(() => {
-    // State is set when the data arrives, never synchronously inside the effect.
-    const fetchItems = () =>
-      fetchOpenItems().then((merged) => {
-        setItems(merged);
-        setLoading(false);
-      });
-
-    fetchItems();
-
-    const channel = supabase
-      .channel("items_changes")
-      .on("postgres_changes", { event: "*", schema: "public", table: "found_items" }, () => fetchItems())
-      .on("postgres_changes", { event: "*", schema: "public", table: "lost_items" }, () => fetchItems())
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
 
   const filteredItems = useMemo(() => {
     return items.filter((item) => {

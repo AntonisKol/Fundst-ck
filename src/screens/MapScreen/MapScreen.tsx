@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { View, ActivityIndicator, Alert, Text, Modal, Pressable, FlatList, Linking } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import MapView, { Marker, Callout } from "react-native-maps";
-import { supabase } from "../../supabase/supabase";
 import { useNavigation, StackActions } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors } from "../../constants/theme";
@@ -11,47 +10,30 @@ import { useAuth } from "../../context/AuthContext";
 import { fetchCoordinates } from "../../utils/geocode";
 import { locationIfAllowed, pickStartingPoint, regionAround, requestLocation } from "../../utils/location";
 import { styles } from "./styled";
-import { ItemRecord, ItemType } from "../../types/items";
+import { ItemRow } from "../../types/items";
+import { useOpenItems } from "../../hooks/useOpenItems";
 import { RootStackParamList } from "../../types/navigation";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
-type Item = Omit<ItemRecord, "latitude" | "longitude"> & {
-  type: ItemType;
+type Item = Omit<ItemRow, "latitude" | "longitude"> & {
   latitude: number;
   longitude: number;
 };
 
-const formatItems = (data: ItemRecord[] | null, type: ItemType): Item[] =>
-  (data || []).flatMap((item) => {
+// Only posts with usable coordinates can be pinned.
+const withCoordinates = (items: ItemRow[]): Item[] =>
+  items.flatMap((item) => {
     if (item.latitude === null || item.longitude === null) return [];
     if (!Number.isFinite(item.latitude) || !Number.isFinite(item.longitude)) return [];
 
-    return [{ ...item, type, latitude: item.latitude, longitude: item.longitude }];
+    return [{ ...item, latitude: item.latitude, longitude: item.longitude }];
   });
-
-const fetchMapItems = async (): Promise<Item[]> => {
-  const [foundRes, lostRes] = await Promise.all([
-    supabase.from("found_items").select("*").eq("status", "open"),
-    supabase.from("lost_items").select("*").eq("status", "open"),
-  ]);
-
-  if (foundRes.error) {
-    console.error("Error fetching found items:", foundRes.error);
-    Alert.alert("Error fetching items", foundRes.error.message);
-  }
-  if (lostRes.error) {
-    console.error("Error fetching lost items:", lostRes.error);
-    Alert.alert("Error fetching items", lostRes.error.message);
-  }
-
-  return [...formatItems(foundRes.data, "found"), ...formatItems(lostRes.data, "lost")];
-};
 
 const BERLIN_REGION = { latitude: 52.52, longitude: 13.405, latitudeDelta: 0.15, longitudeDelta: 0.15 };
 
 const MapScreen = () => {
-  const [items, setItems] = useState<Item[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { items: openItems, loading, error } = useOpenItems("map_items_changes");
+  const items = useMemo(() => withCoordinates(openItems), [openItems]);
   const [selectedGroup, setSelectedGroup] = useState<Item[] | null>(null);
   const [mapReady, setMapReady] = useState(false);
   const [showUserLocation, setShowUserLocation] = useState(false);
@@ -63,33 +45,8 @@ const MapScreen = () => {
   const mapRef = useRef<MapView>(null);
 
   useEffect(() => {
-    // State is set when the data arrives, never synchronously inside the effect.
-    const fetchItems = () =>
-      fetchMapItems().then((mapItems) => {
-        setItems(mapItems);
-        setLoading(false);
-      });
-
-    fetchItems();
-
-    const channel = supabase
-      .channel("map_items_changes")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "found_items" },
-        () => fetchItems()
-      )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "lost_items" },
-        () => fetchItems()
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
+    if (error) Alert.alert("Error fetching items", error);
+  }, [error]);
 
   // Items are geocoded from their ZIP code, so items sharing a ZIP land on
   // (near enough) the same coordinate. Group by ZIP so the map shows one

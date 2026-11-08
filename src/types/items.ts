@@ -20,4 +20,7 @@ export interface ListItem extends Omit<ItemRecord, "latitude" | "longitude"> {
   type: ItemType;
 }
 
+// A full row from either table, tagged with the table it came from.
+export type ItemRow = ItemRecord & { type: ItemType };
+
 export type ItemDetailsParams = ListItem;

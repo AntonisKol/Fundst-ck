@@ -1,6 +1,6 @@
 import { supabase } from "../supabase/supabase";
 import { fetchCoordinates } from "./geocode";
-import { ItemRecord, ItemStatus, ItemType, ListItem } from "../types/items";
+import { ItemRecord, ItemRow, ItemStatus, ItemType } from "../types/items";
 
 export const NETWORK_ERROR_MESSAGE = "Couldn't reach the server. Check your connection and try again.";
 
@@ -68,22 +68,22 @@ export const deleteItem = async (type: ItemType, id: string): Promise<string | n
   }
 };
 
-const tagWithType = (rows: ItemRecord[] | null, type: ItemType): ListItem[] =>
+const tagWithType = (rows: ItemRecord[] | null, type: ItemType): ItemRow[] =>
   (rows ?? []).map((row) => ({ ...row, type }));
 
-// The signed-in user's found and lost posts, newest first.
-export const fetchMyItems = async (
-  userId: string
-): Promise<{ data: ListItem[]; error: null } | { data: null; error: string }> => {
+type ItemsResult = { data: ItemRow[]; error: null } | { data: null; error: string };
+
+// Found and lost posts where one column matches, merged and newest first.
+const fetchFoundAndLost = async (column: "user_id" | "status", value: string, label: string): Promise<ItemsResult> => {
   try {
     const [found, lost] = await Promise.all([
-      supabase.from("found_items").select("*").eq("user_id", userId),
-      supabase.from("lost_items").select("*").eq("user_id", userId),
+      supabase.from("found_items").select("*").eq(column, value),
+      supabase.from("lost_items").select("*").eq(column, value),
     ]);
 
     const failure = found.error ?? lost.error;
     if (failure) {
-      console.error("Supabase fetch my items error:", failure);
+      console.error(`Supabase fetch ${label} error:`, failure);
       return { data: null, error: failure.message };
     }
 
@@ -92,7 +92,13 @@ export const fetchMyItems = async (
     );
     return { data: items, error: null };
   } catch (err) {
-    console.error("Supabase fetch my items error:", err);
+    console.error(`Supabase fetch ${label} error:`, err);
     return { data: null, error: NETWORK_ERROR_MESSAGE };
   }
 };
+
+// The signed-in user's posts, open and returned.
+export const fetchMyItems = (userId: string) => fetchFoundAndLost("user_id", userId, "my items");
+
+// Everyone's open posts, for the Feed and the Map.
+export const fetchOpenItems = () => fetchFoundAndLost("status", "open", "open items");
