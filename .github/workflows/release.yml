@@ -1,0 +1,76 @@
+name: Release
+
+# Pushing a version tag publishes a GitHub Release and moves its cards on the
+# "Fundstück" project board from Done to Released:
+#
+#   git checkout main && git pull
+#   git tag v0.1.0 && git push origin v0.1.0
+#
+# 1. A GitHub Release is created for the tag with notes generated from the PRs
+#    merged since the previous v* tag (grouped by .github/release.yml).
+# 2. .github/scripts/release-cards.sh moves the Done cards of the issues and PRs
+#    in the release to Released (first release: every Done card).
+# Both steps skip what's already done, so re-running is safe: Actions -> Release
+# -> Run workflow with an existing tag.
+#
+# Needs the PROJECT_TOKEN secret (classic PAT with the "project" scope) for the
+# board, like project-status.yml. The release itself uses GITHUB_TOKEN.
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing tag to release (e.g. v0.1.0)
+        required: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ inputs.tag || github.ref_name }}
+
+env:
+  TAG: ${{ inputs.tag || github.ref_name }}
+  PROJECT_ID: PVT_kwHOBCcPGs4BmglG
+  STATUS_FIELD_ID: PVTSSF_lAHOBCcPGs4BmglGzhlJVBM
+  DONE: 146c39c9
+  RELEASED: f90a7fe6
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout tag
+        uses: actions/checkout@v7
+        with:
+          ref: refs/tags/${{ env.TAG }}
+          # Full history and tags, to find the previous release.
+          fetch-depth: 0
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            echo "Release $TAG already exists - skipping."
+            exit 0
+          fi
+          prev=$(git describe --tags --abbrev=0 --match 'v*' "$TAG^" 2>/dev/null || true)
+          gh release create "$TAG" --verify-tag --title "$TAG" --generate-notes \
+            ${prev:+--notes-start-tag "$prev"}
+
+      - name: Move released cards
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::warning::PROJECT_TOKEN secret is not set - skipping."
+            exit 0
+          fi
+          .github/scripts/release-cards.sh "$TAG"
