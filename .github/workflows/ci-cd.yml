@@ -38,5 +38,7 @@ jobs:
         run: npx expo-doctor
       - name: Lint
         run: npm run lint
-      - name: Run tests
-        run: npm test
+      - name: Unit tests
+        run: npm run test:unit
+      - name: Screen tests
+        run: npm run test:ui

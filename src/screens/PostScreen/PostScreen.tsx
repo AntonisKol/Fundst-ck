@@ -45,6 +45,8 @@ const PostScreen = () => {
               setType(option.value);
             }}
             style={[styles.option, active && (option.value === "found" ? styles.optionFound : styles.optionLost)]}
+            accessibilityRole="button"
+            accessibilityState={{ selected: active }}
           >
             <Text style={[styles.optionText, active && styles.optionTextActive]}>{option.label}</Text>
           </Pressable>
