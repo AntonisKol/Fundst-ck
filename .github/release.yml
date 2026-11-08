@@ -1,0 +1,13 @@
+# Groups the generated release notes by PR label (see workflows/release.yml).
+changelog:
+  categories:
+    - title: App
+      labels: [app]
+    - title: Database
+      labels: [db]
+    - title: CI and tooling
+      labels: [ci]
+    - title: Docs
+      labels: [docs]
+    - title: Other changes
+      labels: ["*"]
