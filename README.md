@@ -91,9 +91,33 @@ Scan the QR code with Expo Go (SDK 57). Use `--clear` whenever `.env` changes - 
 ### 4. Check
 
 ```bash
+npm run lint
 npm run typecheck
 npm test
 ```
+
+### 5. Check the database rules
+
+Who may edit, report, block or message whom is enforced by Supabase (row level security, grants and triggers), not by the app. Unit tests can't see those rules, so `scripts/db-checks/` tests them against the real database, signed in and signed out, just like the app talks to it:
+
+```bash
+npm run db-checks
+```
+
+| Script | Checks |
+| --- | --- |
+| `008-post-status.mjs` | Only the poster can mark a post returned, reopen or delete it; nobody can change `user_id` or `returned_at` |
+| `009-reports-blocks.mjs` | You can only report or block people you chat with, as yourself; reports can't be edited or withdrawn |
+| `010-block-messages.mjs` | No messages can be sent across a block, and the error text is neutral |
+
+**When:** after running or changing any SQL file in `supabase/`, and before merging a PR that touches the database rules. A failing check exits with code 1.
+
+**What they need:**
+
+- `.env` with the Supabase URL and anon key (never the service role key).
+- A demo account that has at least one conversation. Its login stays outside the repo, as `DEMO_EMAIL` and `DEMO_PASSWORD`, or in `~/fundstueck-demo.txt` with `EMAIL=` and `PASSWORD=` lines (`DEMO_CREDENTIALS` points to another file).
+
+**What they change:** only the demo account's own data. 008 works on a temporary post that it deletes; 009 and 010 block the demo account's first chat partner and always unblock again. Reports can't be withdrawn, so 009 leaves one report against that partner (note `db-check 009 - safe to delete`), and later runs see it as "already reported". Deleting someone else's post isn't tested, because if that rule were broken the check would really delete it.
 
 ## Reviewing reports
 
