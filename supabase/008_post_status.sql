@@ -13,7 +13,7 @@ alter table public.found_items add constraint found_items_status_check check (st
 alter table public.lost_items drop constraint if exists lost_items_status_check;
 alter table public.lost_items add constraint lost_items_status_check check (status in ('open', 'returned'));
 
--- The Feed and Map will only show open posts.
+-- The Feed and Map show only open posts, newest first.
 create index if not exists found_items_status_created_idx on public.found_items (status, created_at desc);
 create index if not exists lost_items_status_created_idx on public.lost_items (status, created_at desc);
 
