@@ -96,6 +96,11 @@ npm run typecheck
 npm test
 ```
 
+`npm test` runs both test suites; each also runs on its own:
+
+- `npm run test:unit` - Vitest unit tests for logic (`src/**/*.test.ts`)
+- `npm run test:ui` - Jest + React Native Testing Library screen tests (`src/**/*.ui.test.tsx`)
+
 ### 5. Check the database rules
 
 Who may edit, report, block or message whom is enforced by Supabase (row level security, grants and triggers), not by the app. Unit tests can't see those rules, so `scripts/db-checks/` tests them against the real database, signed in and signed out, just like the app talks to it:
