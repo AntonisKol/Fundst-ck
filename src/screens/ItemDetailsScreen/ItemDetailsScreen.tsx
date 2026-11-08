@@ -118,7 +118,7 @@ const ItemDetailsScreen = ({ route }: NativeStackScreenProps<RootStackParamList,
     if (isMine) return renderOwnerActions();
     if (isReturned) return <Text style={styles.ownPostNote}>This item has been returned</Text>;
     // Posts from before accounts existed have no poster to contact.
-    if (!user_id) return <Text style={styles.ownPostNote}>The poster of this item can't be contacted</Text>;
+    if (!user_id) return <Text style={styles.ownPostNote}>The poster of this item can’t be contacted</Text>;
 
     return (
       <Pressable
