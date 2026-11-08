@@ -41,4 +41,6 @@ export const styles = StyleSheet.create({
     backgroundColor: colors.stamp,
   },
   unreadText: { color: "white", fontSize: 12, fontWeight: "700" },
+  badgeSkeleton: { width: 44, height: 15, borderRadius: 10, marginBottom: 6 },
+  titleSkeleton: { height: 14, marginBottom: 6 },
 });
