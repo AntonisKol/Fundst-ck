@@ -29,6 +29,24 @@ const formatItems = (data: ItemRecord[] | null, type: ItemType): Item[] =>
     return [{ ...item, type, latitude: item.latitude, longitude: item.longitude }];
   });
 
+const fetchMapItems = async (): Promise<Item[]> => {
+  const [foundRes, lostRes] = await Promise.all([
+    supabase.from("found_items").select("*").eq("status", "open"),
+    supabase.from("lost_items").select("*").eq("status", "open"),
+  ]);
+
+  if (foundRes.error) {
+    console.error("Error fetching found items:", foundRes.error);
+    Alert.alert("Error fetching items", foundRes.error.message);
+  }
+  if (lostRes.error) {
+    console.error("Error fetching lost items:", lostRes.error);
+    Alert.alert("Error fetching items", lostRes.error.message);
+  }
+
+  return [...formatItems(foundRes.data, "found"), ...formatItems(lostRes.data, "lost")];
+};
+
 const BERLIN_REGION = { latitude: 52.52, longitude: 13.405, latitudeDelta: 0.15, longitudeDelta: 0.15 };
 
 const MapScreen = () => {
@@ -44,30 +62,14 @@ const MapScreen = () => {
   const insets = useSafeAreaInsets();
   const mapRef = useRef<MapView>(null);
 
-  const fetchItems = async () => {
-
-    const [foundRes, lostRes] = await Promise.all([
-      supabase.from("found_items").select("*").eq("status", "open"),
-      supabase.from("lost_items").select("*").eq("status", "open"),
-    ]);
-
-    if (foundRes.error) {
-      console.error("Error fetching found items:", foundRes.error);
-      Alert.alert("Error fetching items", foundRes.error.message);
-    }
-    if (lostRes.error) {
-      console.error("Error fetching lost items:", lostRes.error);
-      Alert.alert("Error fetching items", lostRes.error.message);
-    }
-
-    setItems([
-      ...formatItems(foundRes.data, "found"),
-      ...formatItems(lostRes.data, "lost"),
-    ]);
-    setLoading(false);
-  };
-
   useEffect(() => {
+    // State is set when the data arrives, never synchronously inside the effect.
+    const fetchItems = () =>
+      fetchMapItems().then((mapItems) => {
+        setItems(mapItems);
+        setLoading(false);
+      });
+
     fetchItems();
 
     const channel = supabase

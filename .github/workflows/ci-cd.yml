@@ -36,8 +36,7 @@ jobs:
         run: npm run typecheck
       - name: Expo Doctor
         run: npx expo-doctor
-      - name: ESLint check
-        run: npx eslint . --ext .ts,.tsx,.js,.jsx
-        continue-on-error: true
+      - name: Lint
+        run: npm run lint
       - name: Run tests
         run: npm test

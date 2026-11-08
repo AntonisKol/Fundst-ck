@@ -10,9 +10,10 @@ import {
   Keyboard,
   Platform,
   InputAccessoryView,
+  StyleProp,
+  ViewStyle,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { StyleProp, ViewStyle } from "react-native";
 import { BERLIN_ZIP_CODES } from "../constants/berlinZipCodes";
 import { colors } from "../constants/theme";
 

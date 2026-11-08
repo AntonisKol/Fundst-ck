@@ -69,7 +69,7 @@ const ReportSheet = ({ visible, reporterId, reportedUserId, message, onClose }: 
             </View>
           )}
 
-          <Text style={styles.label}>What's wrong?</Text>
+          <Text style={styles.label}>What’s wrong?</Text>
           {REPORT_REASONS.map((option) => {
             const selected = reason === option.value;
             return (

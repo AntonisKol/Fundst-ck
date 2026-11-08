@@ -29,6 +29,21 @@ const TYPES: { label: string; value: "All" | ItemType }[] = [
   { label: "Lost", value: "lost" },
 ];
 
+const fetchOpenItems = async (): Promise<ListItem[]> => {
+  const [foundRes, lostRes] = await Promise.all([
+    supabase.from("found_items").select("*").eq("status", "open").order("created_at", { ascending: false }),
+    supabase.from("lost_items").select("*").eq("status", "open").order("created_at", { ascending: false }),
+  ]);
+
+  if (foundRes.error) console.error("Error fetching found items:", foundRes.error);
+  if (lostRes.error) console.error("Error fetching lost items:", lostRes.error);
+
+  const found: ListItem[] = (foundRes.data || []).map((item: ItemRecord) => ({ ...item, type: "found" }));
+  const lost: ListItem[] = (lostRes.data || []).map((item: ItemRecord) => ({ ...item, type: "lost" }));
+
+  return [...found, ...lost].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+};
+
 const FoundItemsFeed = () => {
   const { session } = useAuth();
   const [items, setItems] = useState<ListItem[]>([]);
@@ -38,29 +53,14 @@ const FoundItemsFeed = () => {
 
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
-  const fetchItems = async () => {
-    setLoading(true);
-
-    const [foundRes, lostRes] = await Promise.all([
-      supabase.from("found_items").select("*").eq("status", "open").order("created_at", { ascending: false }),
-      supabase.from("lost_items").select("*").eq("status", "open").order("created_at", { ascending: false }),
-    ]);
-
-    if (foundRes.error) console.error("Error fetching found items:", foundRes.error);
-    if (lostRes.error) console.error("Error fetching lost items:", lostRes.error);
-
-    const found: ListItem[] = (foundRes.data || []).map((item: ItemRecord) => ({ ...item, type: "found" }));
-    const lost: ListItem[] = (lostRes.data || []).map((item: ItemRecord) => ({ ...item, type: "lost" }));
-
-    const merged = [...found, ...lost].sort(
-      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-    );
-
-    setItems(merged);
-    setLoading(false);
-  };
-
   useEffect(() => {
+    // State is set when the data arrives, never synchronously inside the effect.
+    const fetchItems = () =>
+      fetchOpenItems().then((merged) => {
+        setItems(merged);
+        setLoading(false);
+      });
+
     fetchItems();
 
     const channel = supabase

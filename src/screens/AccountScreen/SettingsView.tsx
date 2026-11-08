@@ -25,7 +25,12 @@ const SettingsView = ({ session }: { session: Session }) => {
   const [enabled, setEnabled] = useState(savedEnabled);
   const [osAllowed, setOsAllowed] = useState(true);
 
-  useEffect(() => setEnabled(savedEnabled), [savedEnabled]);
+  // Adjust state during render when the saved value changes (React's pattern instead of an effect).
+  const [lastSaved, setLastSaved] = useState(savedEnabled);
+  if (savedEnabled !== lastSaved) {
+    setLastSaved(savedEnabled);
+    setEnabled(savedEnabled);
+  }
 
   // Re-check when returning from the phone's Settings app.
   useEffect(() => {
@@ -60,7 +65,7 @@ const SettingsView = ({ session }: { session: Session }) => {
         </View>
         <View style={styles.settingText}>
           <Text style={styles.settingLabel}>My posts</Text>
-          <Text style={styles.settingHint}>See and manage the items you've reported.</Text>
+          <Text style={styles.settingHint}>See and manage the items you’ve reported.</Text>
         </View>
         <Ionicons name="chevron-forward" size={20} color={colors.inkSoft} />
       </Pressable>
@@ -92,7 +97,7 @@ const SettingsView = ({ session }: { session: Session }) => {
           </View>
           {enabled && !osAllowed && (
             <View style={styles.warning}>
-              <Text style={styles.warningText}>Notifications are turned off for Fundstück in your phone's settings.</Text>
+              <Text style={styles.warningText}>Notifications are turned off for Fundstück in your phone’s settings.</Text>
               <Pressable onPress={() => Linking.openSettings()} hitSlop={8}>
                 <Text style={styles.warningLink}>Open phone settings</Text>
               </Pressable>

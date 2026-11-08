@@ -22,39 +22,47 @@ const UnreadContext = createContext<UnreadContextValue>({
   refreshUnread: () => {},
 });
 
-export const UnreadProvider = ({ children }: { children: ReactNode }) => {
+// Null when the count couldn't be loaded, so the badge keeps its last value.
+const fetchUnreadCount = async (userId: string): Promise<number | null> => {
+  const blockedIds = await fetchBlockedIds(userId);
+  // RLS limits this to messages in my own conversations.
+  let query = supabase
+    .from("messages")
+    .select("id", { count: "exact", head: true })
+    .is("read_at", null)
+    .neq("sender_id", userId);
+  if (blockedIds.length > 0) query = query.not("sender_id", "in", `(${blockedIds.join(",")})`);
+  const { count, error } = await query;
+  if (error) {
+    console.error("Supabase unread count error:", error);
+    return null;
+  }
+  return count ?? 0;
+};
+
+export const UnreadProvider =({ children }: { children: ReactNode }) => {
   const { session } = useAuth();
   const userId = session?.user.id;
   const notificationsOn = messageNotificationsEnabled(session);
 
   const [unreadCount, setUnreadCount] = useState(0);
   const activeConversation = useRef<string | null>(null);
+  // Lets the realtime listener read the latest setting without resubscribing.
   const notificationsOnRef = useRef(notificationsOn);
-  notificationsOnRef.current = notificationsOn;
+  useEffect(() => {
+    notificationsOnRef.current = notificationsOn;
+  }, [notificationsOn]);
 
-  const refreshCount = useCallback(async () => {
+  // State is set when the count arrives, never synchronously inside an effect.
+  const refreshCount = useCallback(() => {
     if (!userId) return;
-    const blockedIds = await fetchBlockedIds(userId);
-    // RLS limits this to messages in my own conversations.
-    let query = supabase
-      .from("messages")
-      .select("id", { count: "exact", head: true })
-      .is("read_at", null)
-      .neq("sender_id", userId);
-    if (blockedIds.length > 0) query = query.not("sender_id", "in", `(${blockedIds.join(",")})`);
-    const { count, error } = await query;
-    if (error) {
-      console.error("Supabase unread count error:", error);
-      return;
-    }
-    setUnreadCount(count ?? 0);
+    fetchUnreadCount(userId).then((count) => {
+      if (count !== null) setUnreadCount(count);
+    });
   }, [userId]);
 
   useEffect(() => {
-    if (!userId) {
-      setUnreadCount(0);
-      return;
-    }
+    if (!userId) return;
 
     refreshCount();
 
@@ -77,8 +85,10 @@ export const UnreadProvider = ({ children }: { children: ReactNode }) => {
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "messages" }, () => refreshCount())
       .subscribe();
 
+    // Signing out or switching accounts clears the previous user's count.
     return () => {
       supabase.removeChannel(channel);
+      setUnreadCount(0);
     };
   }, [userId, refreshCount]);
 

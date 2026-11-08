@@ -122,7 +122,7 @@ const MessagesScreen = () => {
           ListHeaderComponent={
             // With chats already listed, keep them and flag the failed refresh.
             loadError && conversations.length > 0 ? (
-              <Text style={styles.refreshError}>Couldn't refresh. Pull down to try again.</Text>
+              <Text style={styles.refreshError}>Couldn’t refresh. Pull down to try again.</Text>
             ) : null
           }
           // Blocked chats stay reachable: Unblock lives inside the chat.
@@ -138,7 +138,7 @@ const MessagesScreen = () => {
           ListEmptyComponent={
             loadError ? (
               <Text style={styles.empty}>
-                Couldn't load your messages.{"\n"}Pull down to try again.
+                Couldn’t load your messages.{"\n"}Pull down to try again.
               </Text>
             ) : (
               <Text style={styles.empty}>

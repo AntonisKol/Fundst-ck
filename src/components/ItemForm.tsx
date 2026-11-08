@@ -111,7 +111,7 @@ const ItemForm = ({ type }: { type: ItemType }) => {
                 />
                 {isFound && (
                   <Text style={styles.hint}>
-                    Don't show serial numbers, ID cards or distinguishing details in the photo or notes. Keep them to
+                    Don’t show serial numbers, ID cards or distinguishing details in the photo or notes. Keep them to
                     check who the real owner is.
                   </Text>
                 )}

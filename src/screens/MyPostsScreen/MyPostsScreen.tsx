@@ -50,7 +50,7 @@ const MyPostsScreen = () => {
         ListHeaderComponent={
           // With posts already listed, keep them and flag the failed refresh.
           loadError && items.length > 0 ? (
-            <Text style={styles.refreshError}>Couldn't refresh. Pull down to try again.</Text>
+            <Text style={styles.refreshError}>Couldn’t refresh. Pull down to try again.</Text>
           ) : null
         }
         ListEmptyComponent={
