@@ -1,11 +1,11 @@
 # Takes the README screenshots on the iOS Simulator - see scripts/screenshots.sh.
 # EMAIL and PASSWORD (a demo account) are passed in with -e, never stored here.
 # APP_ID picks the app: Expo Go (host.exp.Exponent) or the native build from
-# `npx expo run:ios` (com.antoniskol.lostandfound-app). The script sets it.
+# `npx expo run:ios` (com.antoniskol.lostandfound-app). The script always sets
+# it; there's no default here because a flow env value would override -e.
 appId: ${APP_ID}
 name: README screenshots
 env:
-  APP_ID: host.exp.Exponent
   EXPO_URL: exp://127.0.0.1:8082
   # Position of "Not Now" on the iOS "Save Password?" pop-up; differs per
   # device. iPhone 17: 32%,63% - iPhone SE (3rd gen): 30%,66%.
@@ -26,6 +26,10 @@ env:
       # A fresh simulator asks once: Open in "Expo Go"?
       - tapOn:
           text: "Open"
+          optional: true
+      # A fresh Expo Go install explains its developer menu once.
+      - tapOn:
+          text: "Continue"
           optional: true
 - runFlow:
     when:
@@ -78,20 +82,26 @@ env:
 # iOS pop-ups that may show up after signing in. They hide the app from
 # Maestro, so handle them before waiting for Settings.
 # "Save Password?" belongs to the iOS password manager, whose buttons Maestro
-# can't read - tap "Not Now" by position (NOT_NOW above). The pop-up can take a
-# few seconds to appear, so tap a few times; without it, that spot is empty
-# space below the Settings card, so extra taps do nothing.
+# can't read - tap "Not Now" by position (NOT_NOW above). It can take a few
+# seconds to appear, so keep tapping only while Settings is still hidden: a tap
+# on that spot once Settings shows could hit a switch.
 - repeat:
-    times: 3
+    while:
+      notVisible: "Message notifications"
+    times: 6
     commands:
       - waitForAnimationToEnd:
           timeout: 3000
+      # The notification permission pop-up, if it's the one showing.
       - tapOn:
-          point: ${NOT_NOW}
-# Notification permission ("optional" moves on if it doesn't appear).
-- tapOn:
-    text: "Allow"
-    optional: true
+          text: "Allow"
+          optional: true
+      - runFlow:
+          when:
+            notVisible: "Message notifications"
+          commands:
+            - tapOn:
+                point: ${NOT_NOW}
 - extendedWaitUntil:
     visible: "Message notifications"
     timeout: 15000
