@@ -1,6 +1,9 @@
 # Takes the README screenshots on the iOS Simulator - see scripts/screenshots.sh.
 # EMAIL and PASSWORD (a demo account) are passed in with -e, never stored here.
-appId: host.exp.Exponent
+# APP_ID picks the app: Expo Go (host.exp.Exponent) or the native build from
+# `npx expo run:ios` (com.antoniskol.lostandfound-app). The script always sets
+# it; there's no default here because a flow env value would override -e.
+appId: ${APP_ID}
 name: README screenshots
 env:
   EXPO_URL: exp://127.0.0.1:8082
@@ -8,18 +11,34 @@ env:
   # device. iPhone 17: 32%,63% - iPhone SE (3rd gen): 30%,66%.
   NOT_NOW: "32%,63%"
 ---
-# Feed items and tabs are matched by their accessibility label, which joins
-# all their texts ("FOUND, Wallet, 10997, ..." / "Feed, tab, 1 of 5").
-# Close Expo Go first so every run starts fresh on the landing page.
+# The flow never looks for a specific post or chat: it opens the first item
+# card (testID "item-card") and the first conversation (testID
+# "conversation-row"), so it keeps working when posts are deleted or returned.
+# Tabs are matched by their accessibility label ("Feed, tab, 1 of 5").
+
+# Close the app first so every run starts fresh on the landing page.
 - stopApp
-- openLink: ${EXPO_URL}
-# A fresh simulator asks once: Open in "Expo Go"?
-- tapOn:
-    text: "Open"
-    optional: true
+- runFlow:
+    when:
+      true: ${APP_ID == 'host.exp.Exponent'}
+    commands:
+      - openLink: ${EXPO_URL}
+      # A fresh simulator asks once: Open in "Expo Go"?
+      - tapOn:
+          text: "Open"
+          optional: true
+      # A fresh Expo Go install explains its developer menu once.
+      - tapOn:
+          text: "Continue"
+          optional: true
+- runFlow:
+    when:
+      true: ${APP_ID != 'host.exp.Exponent'}
+    commands:
+      - launchApp
 - extendedWaitUntil:
     visible: "Get Started"
-    timeout: 30000
+    timeout: 60000  # the first bundle from Metro can take a while
 - tapOn: "Get Started"
 
 # Start signed out, so screens show what a new visitor sees.
@@ -33,17 +52,18 @@ env:
 # Signed out: Feed, item details, Map
 - tapOn: "Feed, tab.*"
 - extendedWaitUntil:
-    visible: "FOUND"
+    visible:
+      id: "item-card"
     timeout: 15000
 - takeScreenshot: 01-feed
-- scrollUntilVisible:
-    element: ".*Slim black card holder.*"
-    centerElement: true  # keep it clear of the tab bar before tapping
-- tapOn: ".*Slim black card holder.*"
+- tapOn:
+    id: "item-card"
+    index: 0
 - assertVisible: "Sign in to contact"
 - takeScreenshot: 02-item-details
 - tapOn: "‹ Back"
 - tapOn: "Map, tab.*"
+- assertVisible: "Show my location"  # the locate button
 - waitForAnimationToEnd:
     timeout: 5000
 - takeScreenshot: 03-map
@@ -62,20 +82,26 @@ env:
 # iOS pop-ups that may show up after signing in. They hide the app from
 # Maestro, so handle them before waiting for Settings.
 # "Save Password?" belongs to the iOS password manager, whose buttons Maestro
-# can't read - tap "Not Now" by position (NOT_NOW above). The pop-up can take a
-# few seconds to appear, so tap a few times; without it, that spot is empty
-# space below the Settings card, so extra taps do nothing.
+# can't read - tap "Not Now" by position (NOT_NOW above). It can take a few
+# seconds to appear, so keep tapping only while Settings is still hidden: a tap
+# on that spot once Settings shows could hit a switch.
 - repeat:
-    times: 3
+    while:
+      notVisible: "Message notifications"
+    times: 6
     commands:
       - waitForAnimationToEnd:
           timeout: 3000
+      # The notification permission pop-up, if it's the one showing.
       - tapOn:
-          point: ${NOT_NOW}
-# Notification permission ("optional" moves on if it doesn't appear).
-- tapOn:
-    text: "Allow"
-    optional: true
+          text: "Allow"
+          optional: true
+      - runFlow:
+          when:
+            notVisible: "Message notifications"
+          commands:
+            - tapOn:
+                point: ${NOT_NOW}
 - extendedWaitUntil:
     visible: "Message notifications"
     timeout: 15000
@@ -89,25 +115,28 @@ env:
 - assertVisible: "Consider handing it in.*"  # the link's accessibility label
 - takeScreenshot: 04-post
 
-# Chat with the owner of a lost wallet. The flow only reads data: the demo
-# conversation and its messages are set up beforehand.
+# My posts, from the Feed header. The demo account needs at least one post.
 - tapOn: "Feed, tab.*"
-- scrollUntilVisible:
-    element: ".*Brown leather.*"
-    centerElement: true  # keep it clear of the tab bar before tapping
-- tapOn: ".*Brown leather.*"
-- tapOn: "I found this · Contact owner"
+- tapOn: ".*My posts"  # the icon adds an empty part to the label (", My posts")
+- extendedWaitUntil:
+    visible:
+      id: "item-card"
+    timeout: 15000
+- takeScreenshot: 08-my-posts
+- tapOn: "‹ Back"
+
+# Messages list, then the first chat in it. The flow only reads data: the demo
+# account needs at least one conversation with messages.
+- tapOn: "Messages, tab.*"
+- extendedWaitUntil:
+    visible:
+      id: "conversation-row"
+    timeout: 15000
+- takeScreenshot: 06-messages
 - tapOn:
-    text: "I understand"
-    optional: true  # the one-time safety tips
+    id: "conversation-row"
+    index: 0
 - extendedWaitUntil:
     visible: "Stay safe"
     timeout: 10000
 - takeScreenshot: 05-chat
-- tapOn: "‹ Back"
-- tapOn: "‹ Back"
-
-# Messages list
-- tapOn: "Messages, tab.*"
-- waitForAnimationToEnd
-- takeScreenshot: 06-messages

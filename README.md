@@ -17,6 +17,7 @@ Fundstück is a mobile app for reporting and finding lost and found items in Ber
     <td align="center"><img src="docs/screenshots/05-chat.png" width="200" alt="Chat"><br><sub>Chat</sub></td>
     <td align="center"><img src="docs/screenshots/06-messages.png" width="200" alt="Messages"><br><sub>Messages</sub></td>
     <td align="center"><img src="docs/screenshots/07-settings.png" width="200" alt="Settings"><br><sub>Settings</sub></td>
+    <td align="center"><img src="docs/screenshots/08-my-posts.png" width="200" alt="My posts"><br><sub>My posts</sub></td>
   </tr>
 </table>
 
@@ -242,4 +243,6 @@ npx expo start --port 8082   # serve the app; open it once in the simulator's Ex
 ./scripts/screenshots.sh      # runs the flow and updates docs/screenshots/
 ```
 
-The demo login lives outside the repo in `~/fundstueck-demo.txt` (`EMAIL=` and `PASSWORD=` lines).
+With the native build instead of Expo Go, run `npx expo run:ios` (it serves the app on port 8081) and then `./scripts/screenshots.sh --native`.
+
+The demo login lives outside the repo in `~/fundstueck-demo.txt` (`EMAIL=` and `PASSWORD=` lines). The flow opens whichever post is first in the Feed and the first chat in Messages, so it doesn't depend on any particular post; the demo account only needs at least one post of its own and one conversation with messages.
