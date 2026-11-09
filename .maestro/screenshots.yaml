@@ -117,7 +117,7 @@ env:
 
 # My posts, from the Feed header. The demo account needs at least one post.
 - tapOn: "Feed, tab.*"
-- tapOn: "My posts"
+- tapOn: ".*My posts"  # the icon adds an empty part to the label (", My posts")
 - extendedWaitUntil:
     visible:
       id: "item-card"

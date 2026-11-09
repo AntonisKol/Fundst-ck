@@ -34,6 +34,9 @@ trap 'rm -rf "$out"' EXIT
 
 xcrun simctl status_bar booted override --time "9:41" --batteryState charged --batteryLevel 100 \
   --cellularMode active --cellularBars 4 --wifiBars 3
+# A fresh simulator has no location, so the app's location lookup fails and the
+# dev build's error overlay covers the screen. Put it in central Berlin.
+xcrun simctl location booted set 52.5200,13.4050
 "$maestro" test --test-output-dir "$out" -e APP_ID="$app_id" -e EMAIL="$email" -e PASSWORD="$password" \
   .maestro/screenshots.yaml
 
