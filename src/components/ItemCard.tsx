@@ -3,6 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { CATEGORY_ICONS } from "../constants/categories";
 import { colors } from "../constants/theme";
 import { ListItem } from "../types/items";
+import Skeleton, { SkeletonBlock, SkeletonLine } from "./Skeleton";
 
 interface Props {
   item: ListItem;
@@ -43,6 +44,23 @@ const ItemCard = ({ item, onPress, showStatus = false }: Props) => {
   );
 };
 
+// Placeholder cards for the first load. They reuse the card's own styles so
+// nothing shifts when the real cards replace them.
+export const ItemCardSkeletonList = ({ count = 5 }: { count?: number }) => (
+  <Skeleton>
+    {Array.from({ length: count }, (_, index) => (
+      <View key={index} style={styles.card}>
+        <SkeletonBlock style={styles.image} />
+        <View style={styles.body}>
+          <SkeletonBlock style={styles.badgeSkeleton} />
+          <SkeletonLine width="55%" style={styles.categorySkeleton} />
+          <SkeletonLine width="30%" />
+        </View>
+      </View>
+    ))}
+  </Skeleton>
+);
+
 export default ItemCard;
 
 const styles = StyleSheet.create({
@@ -69,4 +87,6 @@ const styles = StyleSheet.create({
   category: { fontWeight: "700", fontSize: 16, marginBottom: 2, color: colors.ink },
   location: { color: colors.inkSoft },
   notes: { marginTop: 4, fontStyle: "italic", color: colors.inkSoft },
+  badgeSkeleton: { width: 52, height: 17, borderRadius: 12, marginBottom: 8 },
+  categorySkeleton: { height: 14, marginBottom: 8 },
 });

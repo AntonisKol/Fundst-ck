@@ -13,6 +13,11 @@ export const styles = StyleSheet.create({
   bubbleTextMine: { color: "white" },
   time: { fontSize: 11, marginTop: 4, color: colors.inkSoft },
   timeMine: { color: colors.stampTint, textAlign: "right" },
+  skeletonContainer: { flex: 1, justifyContent: "flex-end" },
+  bubbleSkeleton: { height: 56, borderRadius: 18, marginVertical: 3 },
+  // Muted versions of the real bubbles, so both sides read as placeholders.
+  bubbleSkeletonMine: { alignSelf: "flex-end", borderBottomRightRadius: 4, backgroundColor: colors.stampTint },
+  bubbleSkeletonTheirs: { alignSelf: "flex-start", borderBottomLeftRadius: 4 },
   blockedBar: {
     flexDirection: "row",
     alignItems: "center",
